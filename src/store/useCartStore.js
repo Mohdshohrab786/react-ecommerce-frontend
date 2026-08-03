@@ -29,6 +29,9 @@ export const useCartStore = create(
                 });
             },
 
+
+
+
             saveShippingAddress: (data) => {
                 set({ shippingAddress: data });
             },
@@ -44,8 +47,7 @@ export const useCartStore = create(
             clearCart: () => {
                 set({ cartItems: [] });
             }
-        }),
-        {
+        }), {
             name: 'cart-storage',
         }
     )
