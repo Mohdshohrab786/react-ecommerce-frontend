@@ -1,0 +1,163 @@
+.contact-page {
+    padding-top: 0;
+    padding-bottom: 80px;
+}
+
+.contact-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.contact-header h1 {
+    font-size: 3.5rem;
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.contact-header .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 40px;
+}
+
+.glass-panel {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    padding: 40px;
+    border-radius: 0; /* Keep fashion theme sharp corners */
+}
+
+.contact-info h2, .contact-form h2 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+}
+
+.info-desc {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 40px;
+}
+
+.info-items {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.info-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.info-icon {
+    color: var(--text-primary);
+    margin-top: 4px;
+}
+
+.info-item h3 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.map-placeholder {
+    width: 100%;
+    height: 180px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+}
+
+.placeholder-text {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.modern-input, .modern-textarea {
+    width: 100%;
+    padding: 14px 18px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+    border-radius: 0;
+}
+
+.modern-input:focus, .modern-textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.success-state {
+    text-align: center;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.success-icon {
+    color: #10b981;
+}
+
+.success-state p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 450px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 992px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}

@@ -1,0 +1,126 @@
+.shop-page {
+    padding: 40px 0;
+    min-height: 70vh;
+}
+
+.shop-header {
+    margin-bottom: 30px;
+}
+
+.shop-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 10px 0;
+}
+
+.shop-count {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.shop-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.shop-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.shop-products {
+    flex: 1;
+}
+
+.shop-products .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: color 0.2s;
+    font-family: inherit;
+}
+
+.filter-btn:hover {
+    color: var(--primary-color);
+}
+
+.filter-btn.active {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.price-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.price-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.price-input:focus {
+    border-color: var(--primary-color);
+}
+
+.sidebar-category-list,
+.sidebar-subcat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-cat-item {
+    position: relative;
+}
+
+.sidebar-subcat-list {
+    display: none;
+    padding-left: 15px; /* Indent subcategories */
+}
+
+/* Show subcategories on hover */
+.sidebar-cat-item:hover > .sidebar-subcat-list {
+    display: block;
+}
+
+.sidebar-cat-item .cat-chevron {
+    transition: transform 0.2s ease;
+}
+
+.sidebar-cat-item:hover > .filter-btn .cat-chevron {
+    transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+    .shop-layout {
+        flex-direction: column;
+    }
+    
+    .shop-sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}

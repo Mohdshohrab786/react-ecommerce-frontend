@@ -1,0 +1,88 @@
+.admin-dark-theme {
+    /* Revert to original dark theme colors */
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #141417;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    
+    --border-color: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(20, 20, 23, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
+
+    /* Use Inter font for admin if preferred, or keep current */
+    font-family: 'Inter', 'Lato', sans-serif;
+    
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: calc(100vh - 80px); /* 80px is navbar height */
+    display: flex;
+}
+
+/* Ensure headings inside admin panel use the sans-serif font, not Playfair */
+.admin-dark-theme h1, 
+.admin-dark-theme h2, 
+.admin-dark-theme h3, 
+.admin-dark-theme h4, 
+.admin-dark-theme h5, 
+.admin-dark-theme h6 {
+    font-family: 'Inter', 'Lato', sans-serif;
+    color: var(--text-primary);
+}
+
+.admin-dark-theme .btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.admin-dark-theme .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.admin-dark-theme .input-field {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+}
+
+/* Sidebar overriding */
+.admin-sidebar {
+    background-color: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+.admin-sidebar a {
+    color: var(--text-secondary) !important;
+}
+
+.admin-sidebar a:hover, .admin-sidebar a.active {
+    background-color: rgba(255,255,255,0.05) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Data Tables */
+.admin-dark-theme table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-dark-theme table td {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Cards / Widgets */
+.admin-dark-theme .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+}

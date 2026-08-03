@@ -1,0 +1,261 @@
+/* ============================================
+   HOME2 Top Content Area
+   ============================================ */
+.home2-top-content {
+  background: #f5f5f5;
+  padding: 15px 0 0;
+}
+
+/* Box Content 1: Slider + Banners side by side */
+.box-content1 {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Slider col: 66.66% */
+.col-slider {
+  flex: 0 0 calc(66.66% - 6px);
+  max-width: calc(66.66% - 6px);
+}
+
+/* Banners col: 33.33% */
+.col-banners {
+  flex: 0 0 calc(33.33% - 6px);
+  max-width: calc(33.33% - 6px);
+}
+
+/* ============================================
+   Main Hero Slider
+   ============================================ */
+.hero-slider-wrapper {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #eee;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 60%, transparent 100%);
+  z-index: 1;
+}
+
+.slide-content {
+  position: relative;
+  z-index: 2;
+  padding: 30px 35px;
+  color: #fff;
+}
+
+.slide-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.slide-subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.88);
+  margin-bottom: 18px;
+  font-weight: 300;
+}
+
+.slide-btn {
+  display: inline-block;
+  background: #f28b00;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.slide-btn:hover {
+  background: #d97a00;
+  color: #fff;
+}
+
+/* Arrows */
+.slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(255,255,255,0.85);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 22px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.hero-slider-wrapper:hover .slider-arrow {
+  opacity: 1;
+}
+
+.slider-arrow:hover {
+  background: #f28b00;
+  color: #fff;
+}
+
+.prev-arrow { left: 12px; }
+.next-arrow { right: 12px; }
+
+/* Dots */
+.slider-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+}
+
+.slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.slider-dot.active {
+  background: #f28b00;
+  width: 22px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   Mini Banners 2x2 Grid
+   ============================================ */
+.mini-banners-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  height: 380px;
+}
+
+.mini-banner-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  display: block;
+}
+
+.mini-banner-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.mini-banner-item:hover img {
+  transform: scale(1.05);
+}
+
+.mini-banner-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  padding: 12px 10px 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mini-banner-item:hover .mini-banner-overlay {
+  opacity: 1;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 991px) {
+  .box-content1 {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .col-slider,
+  .col-banners {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .hero-slider-wrapper {
+    height: 280px;
+  }
+
+  .mini-banners-grid {
+    height: 200px;
+  }
+
+  .slide-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-slider-wrapper {
+    height: 220px;
+  }
+
+  .mini-banners-grid {
+    height: 160px;
+  }
+
+  .slide-title {
+    font-size: 16px;
+  }
+
+  .slide-content {
+    padding: 20px;
+  }
+}
