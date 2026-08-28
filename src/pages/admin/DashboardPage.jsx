@@ -95,29 +95,79 @@ const DashboardPage = () => {
         }
     };
 
-    // Chart Data Preparation (Area & Trend Line)
-    const activeChartData = useMemo(() => {
-        if (!stats) return [];
-        if (salesTab === '7days') {
-            return stats.last7Days || [];
-        } else {
-            return stats.last6Months || [];
+    // Robust Fallback 7-Day dataset if backend hasn't populated yet
+    const default7Days = useMemo(() => {
+        const list = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            list.push({
+                day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                sales: i === 0 && stats?.todaySales ? Number(stats.todaySales) : 0,
+                orders: i === 0 && stats?.todayOrders ? Number(stats.todayOrders) : 0
+            });
         }
-    }, [stats, salesTab]);
+        return list;
+    }, [stats]);
+
+    // Robust Fallback 6-Month dataset
+    const default6Months = useMemo(() => {
+        const list = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            list.push({
+                month: d.toLocaleDateString('en-US', { month: 'short' }),
+                sales: i === 0 && stats?.thisMonthSales ? Number(stats.thisMonthSales) : 0,
+                orders: i === 0 && stats?.thisMonthOrdersCount ? Number(stats.thisMonthOrdersCount) : 0
+            });
+        }
+        return list;
+    }, [stats]);
+
+    // Fallback Day of Week stats
+    const defaultDayOfWeek = useMemo(() => {
+        return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => ({
+            day,
+            orders: 0,
+            sales: 0
+        }));
+    }, []);
+
+    // Active chart data
+    const activeChartData = useMemo(() => {
+        if (!stats) return default7Days;
+        if (salesTab === '7days') {
+            return (stats.last7Days && stats.last7Days.length > 0) ? stats.last7Days : default7Days;
+        } else {
+            return (stats.last6Months && stats.last6Months.length > 0) ? stats.last6Months : default6Months;
+        }
+    }, [stats, salesTab, default7Days, default6Months]);
+
+    // Active Day of Week stats
+    const activeDayStats = useMemo(() => {
+        if (stats?.dayOfWeekStats && stats.dayOfWeekStats.length > 0) {
+            return stats.dayOfWeekStats;
+        }
+        return defaultDayOfWeek;
+    }, [stats, defaultDayOfWeek]);
 
     // Calculate SVG curve points for Sales Chart
     const svgChart = useMemo(() => {
         if (!activeChartData || activeChartData.length === 0) return null;
 
-        const maxSales = Math.max(...activeChartData.map(d => d.sales), 100);
+        const rawMaxSales = Math.max(...activeChartData.map(d => Number(d.sales) || 0));
+        const maxSales = rawMaxSales > 0 ? rawMaxSales : 500;
         const width = 500;
         const height = 180;
-        const padding = 20;
+        const padding = 24;
 
         const points = activeChartData.map((d, idx) => {
+            const val = Number(d.sales) || 0;
             const x = padding + (idx / (activeChartData.length - 1 || 1)) * (width - 2 * padding);
-            const y = height - padding - (d.sales / maxSales) * (height - 2 * padding);
-            return { x, y, ...d };
+            const y = height - padding - (val / maxSales) * (height - 2 * padding);
+            return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)), ...d, sales: val };
         });
 
         // Path generator
@@ -127,14 +177,15 @@ const DashboardPage = () => {
 
         const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`;
 
-        return { points, pathD, areaD, maxSales, width, height };
+        return { points, pathD, areaD, maxSales: rawMaxSales, width, height };
     }, [activeChartData]);
 
     // Day of week max orders for relative bar heights
     const maxDayOrders = useMemo(() => {
-        if (!stats?.dayOfWeekStats) return 10;
-        return Math.max(...stats.dayOfWeekStats.map(d => d.orders), 1);
-    }, [stats]);
+        if (!activeDayStats || activeDayStats.length === 0) return 10;
+        const max = Math.max(...activeDayStats.map(d => Number(d.orders) || 0));
+        return max > 0 ? max : 10;
+    }, [activeDayStats]);
 
     if (loading) {
         return (
@@ -416,16 +467,16 @@ const DashboardPage = () => {
                             <svg viewBox={`0 0 ${svgChart.width} ${svgChart.height}`} className="chart-svg">
                                 <defs>
                                     <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />
-                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
                                     </linearGradient>
                                 </defs>
 
                                 {/* Horizontal Grid Lines */}
                                 <line x1="20" y1="30" x2="480" y2="30" className="chart-grid-line" />
-                                <line x1="20" y1="80" x2="480" y2="80" className="chart-grid-line" />
-                                <line x1="20" y1="130" x2="480" y2="130" className="chart-grid-line" />
-                                <line x1="20" y1="160" x2="480" y2="160" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                                <line x1="20" y1="75" x2="480" y2="75" className="chart-grid-line" />
+                                <line x1="20" y1="120" x2="480" y2="120" className="chart-grid-line" />
+                                <line x1="20" y1="156" x2="480" y2="156" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
 
                                 {/* Filled Gradient Area */}
                                 <path d={svgChart.areaD} fill="url(#salesGradient)" />
@@ -446,10 +497,10 @@ const DashboardPage = () => {
                                         <circle 
                                             cx={p.x} 
                                             cy={p.y} 
-                                            r="4.5" 
-                                            fill="#ffffff" 
-                                            stroke="#6366f1" 
-                                            strokeWidth="2.5" 
+                                            r={p.sales > 0 ? "5.5" : "3.5"} 
+                                            fill={p.sales > 0 ? "#6366f1" : "#475569"} 
+                                            stroke="#ffffff" 
+                                            strokeWidth="2" 
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <title>{`${p.day || p.month || p.date}: ${currency}${p.sales} (${p.orders} orders)`}</title>
@@ -457,7 +508,7 @@ const DashboardPage = () => {
                                         {/* X-Axis Label */}
                                         <text 
                                             x={p.x} 
-                                            y="175" 
+                                            y="174" 
                                             textAnchor="middle" 
                                             className="chart-axis-text"
                                         >
@@ -476,7 +527,7 @@ const DashboardPage = () => {
                         </div>
                         <div className="legend-item">
                             <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                                Peak: {currency}{svgChart ? Math.round(svgChart.maxSales).toLocaleString() : '0'}
+                                Highest: {currency}{svgChart ? Math.round(svgChart.maxSales).toLocaleString() : '0'}
                             </span>
                         </div>
                     </div>
@@ -496,13 +547,17 @@ const DashboardPage = () => {
                     </div>
 
                     <div className="day-bars-container">
-                        {stats?.dayOfWeekStats && stats.dayOfWeekStats.map((item, idx) => {
-                            const heightPercent = Math.max(12, Math.round((item.orders / maxDayOrders) * 100));
-                            const isPeak = item.orders === maxDayOrders;
+                        {activeDayStats.map((item, idx) => {
+                            const ordersCount = Number(item.orders) || 0;
+                            const heightPercent = Math.max(14, Math.round((ordersCount / maxDayOrders) * 100));
+                            const isPeak = ordersCount === maxDayOrders && ordersCount > 0;
 
                             return (
-                                <div key={item.day} className="day-bar-column">
-                                    <div className="day-bar-track" title={`${item.day}: ${item.orders} orders (${currency}${item.sales})`}>
+                                <div key={item.day || idx} className="day-bar-column">
+                                    <span className="day-bar-val" style={{ color: isPeak ? '#f59e0b' : 'var(--text-primary)' }}>
+                                        {ordersCount}
+                                    </span>
+                                    <div className="day-bar-track" title={`${item.day}: ${ordersCount} orders (${currency}${item.sales || 0})`}>
                                         <div 
                                             className="day-bar-fill" 
                                             style={{ 
@@ -513,9 +568,6 @@ const DashboardPage = () => {
                                     </div>
                                     <span className="day-bar-label" style={{ fontWeight: isPeak ? '700' : '500', color: isPeak ? '#f59e0b' : 'var(--text-secondary)' }}>
                                         {item.day}
-                                    </span>
-                                    <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: '600' }}>
-                                        {item.orders}
                                     </span>
                                 </div>
                             );
