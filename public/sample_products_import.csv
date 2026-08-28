@@ -1,0 +1,8 @@
+Product Name,SKU,Category,Brand,Price,Sale Price,Discount,Stock,GST,Image URL,Description
+"Classic Cotton Slim Fit Shirt","SKU-CLOTH-101","Clothing","Shahi Collection",999.00,799.00,20,50,5,"/images/sample.jpg","Premium 100% breathable combed cotton casual and formal shirt."
+"Wireless Noise Cancelling Headphones","SKU-ELEC-202","Electronics","AudioPro",2499.00,1999.00,20,25,18,"/images/sample.jpg","Over-ear wireless bluetooth headphones with deep bass and 40-hour battery life."
+"Men Genuine Leather Formal Shoes","SKU-FOOT-303","Footwear","WalkCraft",1899.00,1499.00,21,30,12,"/images/sample.jpg","Handcrafted genuine leather formal derby shoes with cushioned insole."
+"Smart Fitness Tracker Band 7","SKU-TECH-404","Wearables","FitPulse",1299.00,999.00,23,40,18,"/images/sample.jpg","Waterproof smart band with AMOLED color display, heart rate and SpO2 monitor."
+"Insulated Stainless Steel Water Bottle 1L","SKU-HOME-505","Home & Kitchen","UrbanLiving",499.00,399.00,20,100,12,"/images/sample.jpg","Double wall vacuum insulated flask that keeps drinks cold for 24h and hot for 12h."
+"Vintage Washed Denim Jacket","SKU-CLOTH-606","Clothing","DenimCo",1999.00,1599.00,20,15,5,"/images/sample.jpg","Heavyweight washed denim trucker jacket with dual chest pockets."
+"Organic Darjeeling Green Tea 250g","SKU-GROC-707","Grocery","NatureBliss",299.00,249.00,17,60,0,"/images/sample.jpg","100% natural antioxidant-rich whole leaf green tea directly sourced from Darjeeling."
