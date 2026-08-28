@@ -235,42 +235,42 @@ const OrderList = () => {
             {/* KPI Cards */}
             <div className="order-stats-container">
                 <div className="order-stat-card">
-                    <div className="order-stat-icon">
+                    <div className="order-stat-icon" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
                         <ShoppingBag size={24} />
                     </div>
                     <div className="order-stat-info">
-                        <p style={{ color: '#000', fontWeight: '700' }}>Total Orders</p>
-                        <h3 style={{ color: '#000', fontWeight: '800' }}>{totalOrders}</h3>
+                        <p>Total Orders</p>
+                        <h3>{totalOrders}</h3>
                     </div>
                 </div>
 
                 <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ color: '#10b981' }}>
+                    <div className="order-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
                         <Banknote size={24} />
                     </div>
                     <div className="order-stat-info">
-                        <p style={{ color: '#000', fontWeight: '700' }}>Total Revenue</p>
-                        <h3 style={{ color: '#000', fontWeight: '800' }}>{currency}{totalRevenue.toFixed(2)}</h3>
+                        <p>Total Revenue</p>
+                        <h3>{currency}{totalRevenue.toFixed(2)}</h3>
                     </div>
                 </div>
 
                 <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ color: '#f59e0b' }}>
+                    <div className="order-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>
                         <Clock size={24} />
                     </div>
                     <div className="order-stat-info">
-                        <p style={{ color: '#000', fontWeight: '700' }}>Unpaid Orders</p>
-                        <h3 style={{ color: '#000', fontWeight: '800' }}>{pendingPayments}</h3>
+                        <p>Unpaid Orders</p>
+                        <h3>{pendingPayments}</h3>
                     </div>
                 </div>
 
                 <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ color: '#3b82f6' }}>
+                    <div className="order-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
                         <Truck size={24} />
                     </div>
                     <div className="order-stat-info">
-                        <p style={{ color: '#000', fontWeight: '700' }}>Pending Delivery</p>
-                        <h3 style={{ color: '#000', fontWeight: '800' }}>{pendingDeliveries}</h3>
+                        <p>Pending Delivery</p>
+                        <h3>{pendingDeliveries}</h3>
                     </div>
                 </div>
             </div>
@@ -499,59 +499,59 @@ const OrderList = () => {
                 <div className="admin-modal-overlay" style={{ zIndex: 1500 }}>
                     <div className="admin-modal" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '16px', marginBottom: '16px' }}>
-                            <h2 style={{ fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Package size={20} color="#f28b00" /> Order Details
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
+                                <Package size={22} color="var(--accent-color)" /> Order Details
                             </h2>
-                            <button onClick={() => setViewOrderDetails(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                <CloseIcon size={24} color="#666" />
+                            <button onClick={() => setViewOrderDetails(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px' }}>
+                                <CloseIcon size={22} />
                             </button>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                             {/* Summary Block */}
-                            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                                <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#111', textTransform: 'uppercase' }}>Summary</h3>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Order ID:</strong> #{viewOrderDetails.orderNumber || viewOrderDetails._id.substring(0, 8).toUpperCase()}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Date:</strong> {new Date(viewOrderDetails.createdAt).toLocaleString()}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Customer:</strong> {viewOrderDetails.user?.name || 'Unknown'}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Email:</strong> {viewOrderDetails.user?.email || 'Unknown'}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Payment:</strong> {viewOrderDetails.paymentMethod}</p>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Summary</h3>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Order ID:</strong> #{viewOrderDetails.orderNumber || viewOrderDetails._id.substring(0, 8).toUpperCase()}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Date:</strong> {new Date(viewOrderDetails.createdAt).toLocaleString()}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Customer:</strong> {viewOrderDetails.user?.name || 'Unknown'}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Email:</strong> {viewOrderDetails.user?.email || 'Unknown'}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Payment:</strong> {viewOrderDetails.paymentMethod}</p>
                             </div>
 
                             {/* Shipping Block */}
-                            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                                <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#111', textTransform: 'uppercase' }}>Shipping Info</h3>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Address:</strong> {viewOrderDetails.shippingAddress?.address}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>City:</strong> {viewOrderDetails.shippingAddress?.city}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Postal Code:</strong> {viewOrderDetails.shippingAddress?.postalCode}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Country:</strong> {viewOrderDetails.shippingAddress?.country}</p>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shipping Info</h3>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Address:</strong> {viewOrderDetails.shippingAddress?.address}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>City:</strong> {viewOrderDetails.shippingAddress?.city}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Postal Code:</strong> {viewOrderDetails.shippingAddress?.postalCode}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Country:</strong> {viewOrderDetails.shippingAddress?.country}</p>
                             </div>
                         </div>
 
                         {/* Order Items */}
-                        <div style={{ marginBottom: '24px' }}>
-                            <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#111', textTransform: 'uppercase' }}>Order Items</h3>
-                            <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+                        <div style={{ marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Items</h3>
+                            <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                    <thead style={{ background: '#f3f4f6' }}>
+                                    <thead style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
                                         <tr>
-                                            <th style={{ padding: '10px 16px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Item</th>
-                                            <th style={{ padding: '10px 16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Qty</th>
-                                            <th style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Price</th>
-                                            <th style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Total</th>
+                                            <th style={{ padding: '10px 16px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Item</th>
+                                            <th style={{ padding: '10px 16px', textAlign: 'center', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Qty</th>
+                                            <th style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Price</th>
+                                            <th style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {viewOrderDetails.orderItems && viewOrderDetails.orderItems.map((item, index) => (
                                             <tr key={index}>
-                                                <td style={{ padding: '10px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <img src={item.image?.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image}`} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
-                                                    <span style={{ fontWeight: 500 }}>{item.name}</span>
+                                                <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <img src={item.image?.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image}`} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }} />
+                                                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{item.name}</span>
                                                 </td>
-                                                <td style={{ padding: '10px 16px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>{item.qty}</td>
-                                                <td style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>{currency}{item.price?.toFixed(2)}</td>
-                                                <td style={{ padding: '10px 16px', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontWeight: 600 }}>{currency}{(item.qty * item.price)?.toFixed(2)}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{item.qty}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{currency}{item.price?.toFixed(2)}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', fontWeight: 600, color: 'var(--text-primary)' }}>{currency}{(item.qty * item.price)?.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -560,18 +560,19 @@ const OrderList = () => {
                         </div>
 
                         {/* Order Summary Financials & Status Manager */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
                             
                             {/* Update Status Form */}
-                            <div style={{ background: '#fffcf5', padding: '16px', borderRadius: '8px', border: '1px solid #f28b00' }}>
-                                <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#f28b00', textTransform: 'uppercase' }}>Update Order Status</h3>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Update Order Status</h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#555', marginBottom: '6px' }}>Current Lifecycle Status</label>
+                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Current Lifecycle Status</label>
                                         <select 
                                             value={selectedStatus}
                                             onChange={(e) => setSelectedStatus(e.target.value)}
-                                            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '13px' }}
+                                            className="filter-select"
+                                            style={{ width: '100%' }}
                                         >
                                             {statusOptions.map(opt => (
                                                 <option key={opt} value={opt}>{opt}</option>
@@ -590,17 +591,17 @@ const OrderList = () => {
                             </div>
 
                             {/* Totals */}
-                            <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                                <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#111', textTransform: 'uppercase' }}>Totals</h3>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: '#4b5563' }}>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Totals</h3>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                     <span>Items Subtotal:</span>
                                     <span>{currency}{viewOrderDetails.itemsPrice?.toFixed(2)}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: '#4b5563' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                     <span>Shipping:</span>
                                     <span>{currency}{viewOrderDetails.shippingPrice?.toFixed(2)}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: '#4b5563' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                     <span>Tax:</span>
                                     <span>{currency}{viewOrderDetails.taxPrice?.toFixed(2)}</span>
                                 </div>
@@ -610,9 +611,9 @@ const OrderList = () => {
                                         <span>-{currency}{viewOrderDetails.discountAmount?.toFixed(2)}</span>
                                     </div>
                                 )}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid #e5e7eb', fontSize: '16px', fontWeight: 'bold' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                                     <span>Total:</span>
-                                    <span style={{ color: '#f28b00' }}>{currency}{viewOrderDetails.totalPrice?.toFixed(2)}</span>
+                                    <span style={{ color: 'var(--accent-color)' }}>{currency}{viewOrderDetails.totalPrice?.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
