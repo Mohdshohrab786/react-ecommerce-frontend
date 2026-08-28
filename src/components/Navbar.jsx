@@ -513,18 +513,6 @@ const Navbar = () => {
                                             )}
                                         </div>
                                     </div>
-
-                                    {/* Right Side: Special Promo Banner Card */}
-                                    <div className="mega-menu-promo">
-                                        <div className="mega-promo-card">
-                                            <span className="promo-badge">HOT DEAL</span>
-                                            <h3 className="promo-title">Trending Styles & New Arrivals</h3>
-                                            <p className="promo-desc">Discover handpicked premium collections with exclusive seasonal discounts.</p>
-                                            <Link to="/shop" className="promo-cta-btn">
-                                                Shop Now <ArrowRight size={14} />
-                                            </Link>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* Mega Menu Footer Banner */}
