@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, ShoppingBag, User, ChevronDown, X, Menu, Mail, Phone, Heart, ChevronRight } from 'lucide-react';
+import { Search, ShoppingBag, User, ChevronDown, X, Menu, Mail, Phone, Heart, ChevronRight, Layers, ArrowRight, Sparkles } from 'lucide-react';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWishlistStore } from '../store/useWishlistStore';
@@ -420,67 +420,125 @@ const Navbar = () => {
 
                         {/* Categories Mega Dropdown */}
                         <div 
-                            className="nav-item"
+                            className="nav-item has-mega-menu"
                             onMouseEnter={() => forceCloseMegaMenu && setForceCloseMegaMenu(false)}
                             onMouseLeave={() => setForceCloseMegaMenu(false)}
                         >
-                            <span>
-                                Categories <ChevronDown size={12} />
-                            </span>
+                            <Link to="/shop" className="nav-dropdown-trigger">
+                                Categories <ChevronDown size={12} style={{ marginLeft: '4px' }} />
+                            </Link>
+                            
                             <div 
-                                className={`mega-dropdown ${forceCloseMegaMenu ? 'force-hide' : ''}`}
+                                className={`modern-mega-dropdown ${forceCloseMegaMenu ? 'force-hide' : ''}`}
                                 onClick={(e) => {
-                                    // Only close if it's a link click
                                     if (e.target.closest('a')) {
                                         setForceCloseMegaMenu(true);
                                     }
                                 }}
                             >
-                                {categoryTree.length > 0 ? categoryTree.map(parent => {
-                                    const renderNestedLinks = (nodes, level = 0) => {
-                                        let items = [];
-                                        nodes.forEach(cat => {
-                                            items.push(
-                                                <li key={cat._id} style={{ paddingLeft: `${level * 12}px` }}>
-                                                    <Link to={`/category/${cat.slug}`} style={{ display: 'flex', alignItems: 'center' }}>
-                                                        {level > 0 && <ChevronRight size={14} style={{ marginRight: '4px', color: '#888' }} />}
-                                                        {cat.name}
-                                                    </Link>
-                                                </li>
-                                            );
-                                            if (cat.children && cat.children.length > 0) {
-                                                items = [...items, ...renderNestedLinks(cat.children, level + 1)];
-                                            }
-                                        });
-                                        return items;
-                                    };
-
-                                    return (
-                                        <div key={parent._id} className="mega-col">
-                                            <Link to={`/category/${parent.slug}`} className="mega-col-title">
-                                                {parent.name}
-                                            </Link>
-                                            <ul>
-                                                {renderNestedLinks(parent.children)}
-                                            </ul>
-                                        </div>
-                                    );
-                                }) : (
-                                    <>
-                                        {[
-                                            { name: 'Electronics', subs: ['Smartphones', 'Laptops', 'Tablets', 'Cameras'] },
-                                            { name: 'Fashion', subs: ['Men\'s Wear', 'Women\'s Wear', 'Footwear', 'Accessories'] },
-                                            { name: 'Home & Garden', subs: ['Furniture', 'Decor', 'Kitchen', 'Bedroom'] },
-                                        ].map(cat => (
-                                            <div key={cat.name} className="mega-col">
-                                                <a href="#" className="mega-col-title">{cat.name}</a>
-                                                <ul>
-                                                    {cat.subs.map(sub => <li key={sub}><a href="#">{sub}</a></li>)}
-                                                </ul>
+                                <div className="mega-menu-inner">
+                                    {/* Left Main Content: Category Grid */}
+                                    <div className="mega-menu-main">
+                                        <div className="mega-menu-header">
+                                            <div className="mega-menu-title">
+                                                <Layers size={16} color="#f28b00" />
+                                                <span>Explore All Categories</span>
                                             </div>
-                                        ))}
-                                    </>
-                                )}
+                                            <Link to="/shop" className="mega-view-all-link">
+                                                View All Products <ArrowRight size={13} />
+                                            </Link>
+                                        </div>
+
+                                        <div className="mega-categories-grid">
+                                            {categoryTree.length > 0 ? categoryTree.map((cat, idx) => {
+                                                const gradientColors = [
+                                                    'linear-gradient(135deg, #ffedd5, #fed7aa)',
+                                                    'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
+                                                    'linear-gradient(135deg, #fef3c7, #fde68a)',
+                                                    'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+                                                    'linear-gradient(135deg, #fce7f3, #fbcfe8)',
+                                                    'linear-gradient(135deg, #ede9fe, #ddd6fe)',
+                                                    'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+                                                    'linear-gradient(135deg, #fae8ff, #f5d0fe)'
+                                                ];
+                                                const iconBg = gradientColors[idx % gradientColors.length];
+
+                                                return (
+                                                    <Link 
+                                                        key={cat._id} 
+                                                        to={`/category/${cat.slug}`} 
+                                                        className="mega-category-card"
+                                                    >
+                                                        <div className="cat-card-icon-wrap" style={{ background: iconBg }}>
+                                                            {cat.image ? (
+                                                                <img 
+                                                                    src={cat.image.startsWith('http') ? cat.image : `${window.API_BASE_URL}${cat.image}`} 
+                                                                    alt={cat.name} 
+                                                                    className="cat-thumb-img" 
+                                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                                />
+                                                            ) : null}
+                                                            <span className="cat-initial-badge">
+                                                                {cat.name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <div className="cat-card-info">
+                                                            <h4 className="cat-card-name">
+                                                                {cat.name}
+                                                            </h4>
+                                                            {cat.children && cat.children.length > 0 ? (
+                                                                <span className="cat-sub-count">
+                                                                    {cat.children.length} sub-categories
+                                                                </span>
+                                                            ) : (
+                                                                <span className="cat-card-shop-now">
+                                                                    Shop Now <ChevronRight size={11} />
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </Link>
+                                                );
+                                            }) : (
+                                                ['Electronics', 'Fashion', 'Home Decor', 'Accessories', 'Footwear', 'Beauty'].map(name => (
+                                                    <Link key={name} to="/shop" className="mega-category-card">
+                                                        <div className="cat-card-icon-wrap" style={{ background: '#fff7ed' }}>
+                                                            <span className="cat-initial-badge">{name.charAt(0)}</span>
+                                                        </div>
+                                                        <div className="cat-card-info">
+                                                            <h4 className="cat-card-name">{name}</h4>
+                                                            <span className="cat-card-shop-now">Shop Now <ChevronRight size={11} /></span>
+                                                        </div>
+                                                    </Link>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Side: Special Promo Banner Card */}
+                                    <div className="mega-menu-promo">
+                                        <div className="mega-promo-card">
+                                            <span className="promo-badge">HOT DEAL</span>
+                                            <h3 className="promo-title">Trending Styles & New Arrivals</h3>
+                                            <p className="promo-desc">Discover handpicked premium collections with exclusive seasonal discounts.</p>
+                                            <Link to="/shop" className="promo-cta-btn">
+                                                Shop Now <ArrowRight size={14} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mega Menu Footer Banner */}
+                                <div className="mega-menu-footer">
+                                    <div className="footer-feature">
+                                        <span>🚚 Free Shipping over ₹499</span>
+                                    </div>
+                                    <div className="footer-feature">
+                                        <span>🔒 100% Genuine Quality Products</span>
+                                    </div>
+                                    <div className="footer-feature">
+                                        <span>⭐ Easy 7-Day Hassle-Free Returns</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
