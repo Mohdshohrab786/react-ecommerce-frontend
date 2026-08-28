@@ -64,7 +64,7 @@ const DashboardPage = () => {
 
     return (
         <div className="fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <h1 className="section-title" style={{ margin: 0 }}>Admin Dashboard</h1>
                 <button 
                     type="button" 
@@ -76,57 +76,57 @@ const DashboardPage = () => {
                 </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '16px', borderRadius: '12px' }}>
-                        <Banknote size={32} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px', marginBottom: '32px' }}>
+                <div className="glass" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '12px', borderRadius: '10px', flexShrink: 0 }}>
+                        <Banknote size={26} />
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Sales</p>
-                        <h2 style={{ margin: 0, fontSize: '28px' }}>
+                    <div style={{ minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Sales</p>
+                        <h2 style={{ margin: 0, fontSize: '22px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {currency}{stats && typeof stats.totalSales === 'number' ? stats.totalSales.toFixed(2) : '0.00'}
                         </h2>
                     </div>
                 </div>
 
-                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '16px', borderRadius: '12px' }}>
-                        <ShoppingBag size={32} />
+                <div className="glass" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', padding: '12px', borderRadius: '10px', flexShrink: 0 }}>
+                        <ShoppingBag size={26} />
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Orders</p>
-                        <h2 style={{ margin: 0, fontSize: '28px' }}>{stats ? stats.totalOrders : 0}</h2>
-                    </div>
-                </div>
-
-                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '16px', borderRadius: '12px' }}>
-                        <Package size={32} />
-                    </div>
-                    <div>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Products</p>
-                        <h2 style={{ margin: 0, fontSize: '28px' }}>{stats ? stats.totalProducts : 0}</h2>
+                    <div style={{ minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Orders</p>
+                        <h2 style={{ margin: 0, fontSize: '22px' }}>{stats ? stats.totalOrders : 0}</h2>
                     </div>
                 </div>
 
-                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', padding: '16px', borderRadius: '12px' }}>
-                        <Users size={32} />
+                <div className="glass" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', padding: '12px', borderRadius: '10px', flexShrink: 0 }}>
+                        <Package size={26} />
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Total Customers</p>
-                        <h2 style={{ margin: 0, fontSize: '28px' }}>{stats ? stats.totalUsers : 0}</h2>
+                    <div style={{ minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Products</p>
+                        <h2 style={{ margin: 0, fontSize: '22px' }}>{stats ? stats.totalProducts : 0}</h2>
+                    </div>
+                </div>
+
+                <div className="glass" style={{ padding: '18px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ background: 'rgba(139, 92, 246, 0.12)', color: '#a78bfa', padding: '12px', borderRadius: '10px', flexShrink: 0 }}>
+                        <Users size={26} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-secondary)', margin: '0 0 4px 0', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Users</p>
+                        <h2 style={{ margin: 0, fontSize: '22px' }}>{stats ? stats.totalUsers : 0}</h2>
                     </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-                <div className="glass" style={{ padding: '24px', borderRadius: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                <div className="glass" style={{ padding: '20px', borderRadius: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                        <TrendingUp size={24} style={{ color: 'var(--accent-color)' }} />
-                        <h2 style={{ margin: 0, fontSize: '20px' }}>Recent Orders</h2>
+                        <TrendingUp size={20} style={{ color: 'var(--accent-color)' }} />
+                        <h2 style={{ margin: 0, fontSize: '18px' }}>Recent Orders</h2>
                     </div>
-                    <div style={{ overflowX: 'auto' }}>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                         <table className="admin-table">
                             <thead>
                                 <tr>

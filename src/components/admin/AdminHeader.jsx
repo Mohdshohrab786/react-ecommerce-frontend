@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield } from 'lucide-react';
+import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield, Menu } from 'lucide-react';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import './AdminHeader.css';
@@ -24,7 +24,7 @@ const formatTimeAgo = (dateString) => {
     return past.toLocaleDateString();
 };
 
-const AdminHeader = () => {
+const AdminHeader = ({ onToggleSidebar }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -108,6 +108,17 @@ const AdminHeader = () => {
     return (
         <header className="admin-top-header">
             <div className="admin-header-title">
+                {/* Mobile Hamburger Drawer Button */}
+                <button
+                    type="button"
+                    className="admin-mobile-toggle"
+                    onClick={onToggleSidebar}
+                    aria-label="Open sidebar navigation"
+                    title="Menu"
+                >
+                    <Menu size={22} />
+                </button>
+
                 <h2>Admin Control Center</h2>
                 <span className="admin-header-badge">
                     <Shield size={12} style={{ display: 'inline', marginRight: '4px' }} />
