@@ -53,6 +53,10 @@ const DashboardPage = () => {
     const [breakdownTab, setBreakdownTab] = useState('status'); // 'status' or 'payment'
     const [inventoryTab, setInventoryTab] = useState('categories'); // 'categories' or 'lowstock'
 
+    // Interactive Chart Hover States
+    const [hoveredPoint, setHoveredPoint] = useState(null);
+    const [hoveredDay, setHoveredDay] = useState(null);
+
     const fetchStats = async (isManualRefresh = false) => {
         try {
             if (isManualRefresh) setRefreshing(true);
@@ -462,7 +466,39 @@ const DashboardPage = () => {
                     </div>
 
                     {/* SVG Interactive Trend Chart */}
-                    <div className="chart-container">
+                    <div className="chart-container" style={{ position: 'relative' }}>
+                        {/* Rich Floating Interactive Tooltip */}
+                        {hoveredPoint && (
+                            <div 
+                                className="chart-tooltip-popup"
+                                style={{
+                                    position: 'absolute',
+                                    left: `${(hoveredPoint.x / (svgChart?.width || 500)) * 100}%`,
+                                    top: `${Math.max(12, ((hoveredPoint.y - 15) / (svgChart?.height || 180)) * 100)}%`,
+                                    transform: 'translate(-50%, -100%)',
+                                    pointerEvents: 'none'
+                                }}
+                            >
+                                <div className="tooltip-header">
+                                    📅 {hoveredPoint.day ? `${hoveredPoint.day} (${hoveredPoint.date || ''})` : hoveredPoint.month}
+                                </div>
+                                <div className="tooltip-row">
+                                    <span>Sales Revenue:</span>
+                                    <strong style={{ color: '#10b981' }}>{currency}{Number(hoveredPoint.sales).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
+                                </div>
+                                <div className="tooltip-row">
+                                    <span>Total Orders:</span>
+                                    <strong style={{ color: '#6366f1' }}>{hoveredPoint.orders || 0} orders</strong>
+                                </div>
+                                {hoveredPoint.orders > 0 && (
+                                    <div className="tooltip-row" style={{ fontSize: '11px', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '4px', marginTop: '4px' }}>
+                                        <span>Avg / Order:</span>
+                                        <span>{currency}{(hoveredPoint.sales / hoveredPoint.orders).toFixed(0)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {svgChart && (
                             <svg viewBox={`0 0 ${svgChart.width} ${svgChart.height}`} className="chart-svg">
                                 <defs>
@@ -478,6 +514,19 @@ const DashboardPage = () => {
                                 <line x1="20" y1="120" x2="480" y2="120" className="chart-grid-line" />
                                 <line x1="20" y1="156" x2="480" y2="156" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
 
+                                {/* Vertical Hover Indicator Line */}
+                                {hoveredPoint && (
+                                    <line 
+                                        x1={hoveredPoint.x} 
+                                        y1="25" 
+                                        x2={hoveredPoint.x} 
+                                        y2="156" 
+                                        stroke="rgba(99, 102, 241, 0.6)" 
+                                        strokeWidth="1.5" 
+                                        strokeDasharray="4,4" 
+                                    />
+                                )}
+
                                 {/* Filled Gradient Area */}
                                 <path d={svgChart.areaD} fill="url(#salesGradient)" />
 
@@ -492,30 +541,54 @@ const DashboardPage = () => {
                                 />
 
                                 {/* Interactive Data Nodes */}
-                                {svgChart.points.map((p, idx) => (
-                                    <g key={idx}>
-                                        <circle 
-                                            cx={p.x} 
-                                            cy={p.y} 
-                                            r={p.sales > 0 ? "5.5" : "3.5"} 
-                                            fill={p.sales > 0 ? "#6366f1" : "#475569"} 
-                                            stroke="#ffffff" 
-                                            strokeWidth="2" 
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            <title>{`${p.day || p.month || p.date}: ${currency}${p.sales} (${p.orders} orders)`}</title>
-                                        </circle>
-                                        {/* X-Axis Label */}
-                                        <text 
-                                            x={p.x} 
-                                            y="174" 
-                                            textAnchor="middle" 
-                                            className="chart-axis-text"
-                                        >
-                                            {p.day || p.month}
-                                        </text>
-                                    </g>
-                                ))}
+                                {svgChart.points.map((p, idx) => {
+                                    const isHovered = hoveredPoint && (hoveredPoint.day === p.day && hoveredPoint.date === p.date && hoveredPoint.month === p.month);
+                                    return (
+                                        <g key={idx}>
+                                            {/* Pulse Glow circle on hover */}
+                                            {isHovered && (
+                                                <circle 
+                                                    cx={p.x} 
+                                                    cy={p.y} 
+                                                    r="11" 
+                                                    fill="#6366f1" 
+                                                    opacity="0.3" 
+                                                />
+                                            )}
+                                            {/* Visible Node */}
+                                            <circle 
+                                                cx={p.x} 
+                                                cy={p.y} 
+                                                r={isHovered ? "7" : (p.sales > 0 ? "5.5" : "3.5")} 
+                                                fill={isHovered ? "#818cf8" : (p.sales > 0 ? "#6366f1" : "#475569")} 
+                                                stroke="#ffffff" 
+                                                strokeWidth={isHovered ? "3" : "2"} 
+                                                style={{ transition: 'all 0.2s ease', cursor: 'pointer' }}
+                                            />
+                                            {/* Invisible Wide Touch/Hover Target */}
+                                            <circle 
+                                                cx={p.x} 
+                                                cy={p.y} 
+                                                r="22" 
+                                                fill="transparent" 
+                                                style={{ cursor: 'pointer' }}
+                                                onMouseEnter={() => setHoveredPoint(p)}
+                                                onMouseLeave={() => setHoveredPoint(null)}
+                                                onTouchStart={() => setHoveredPoint(p)}
+                                            />
+                                            {/* X-Axis Label */}
+                                            <text 
+                                                x={p.x} 
+                                                y="174" 
+                                                textAnchor="middle" 
+                                                className="chart-axis-text"
+                                                style={{ fontWeight: isHovered ? '700' : 'normal', fill: isHovered ? '#ffffff' : 'var(--text-secondary)' }}
+                                            >
+                                                {p.day || p.month}
+                                            </text>
+                                        </g>
+                                    );
+                                })}
                             </svg>
                         )}
                     </div>
@@ -534,7 +607,7 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Graph 2: Peak Shopping by Day of Week */}
-                <div className="chart-card">
+                <div className="chart-card" style={{ position: 'relative' }}>
                     <div className="chart-header">
                         <div>
                             <h2 className="chart-title">
@@ -546,15 +619,48 @@ const DashboardPage = () => {
                         </div>
                     </div>
 
+                    {/* Hover Tooltip for Day of Week */}
+                    {hoveredDay && (
+                        <div 
+                            className="chart-tooltip-popup"
+                            style={{
+                                position: 'absolute',
+                                top: '65px',
+                                right: '22px',
+                                zIndex: 10
+                            }}
+                        >
+                            <div className="tooltip-header">
+                                📅 {hoveredDay.day} Statistics
+                            </div>
+                            <div className="tooltip-row">
+                                <span>Orders:</span>
+                                <strong style={{ color: '#f59e0b' }}>{hoveredDay.orders || 0} orders</strong>
+                            </div>
+                            <div className="tooltip-row">
+                                <span>Sales Value:</span>
+                                <strong style={{ color: '#10b981' }}>{currency}{Number(hoveredDay.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="day-bars-container">
                         {activeDayStats.map((item, idx) => {
                             const ordersCount = Number(item.orders) || 0;
                             const heightPercent = Math.max(14, Math.round((ordersCount / maxDayOrders) * 100));
                             const isPeak = ordersCount === maxDayOrders && ordersCount > 0;
+                            const isHovered = hoveredDay && hoveredDay.day === item.day;
 
                             return (
-                                <div key={item.day || idx} className="day-bar-column">
-                                    <span className="day-bar-val" style={{ color: isPeak ? '#f59e0b' : 'var(--text-primary)' }}>
+                                <div 
+                                    key={item.day || idx} 
+                                    className="day-bar-column"
+                                    onMouseEnter={() => setHoveredDay(item)}
+                                    onMouseLeave={() => setHoveredDay(null)}
+                                    onTouchStart={() => setHoveredDay(item)}
+                                    style={{ transform: isHovered ? 'scale(1.08)' : 'none' }}
+                                >
+                                    <span className="day-bar-val" style={{ color: isPeak || isHovered ? '#f59e0b' : 'var(--text-primary)' }}>
                                         {ordersCount}
                                     </span>
                                     <div className="day-bar-track" title={`${item.day}: ${ordersCount} orders (${currency}${item.sales || 0})`}>
@@ -562,11 +668,12 @@ const DashboardPage = () => {
                                             className="day-bar-fill" 
                                             style={{ 
                                                 height: `${heightPercent}%`, 
-                                                background: isPeak ? 'linear-gradient(180deg, #f59e0b, #d97706)' : 'linear-gradient(180deg, #6366f1, #4f46e5)' 
+                                                background: isPeak || isHovered ? 'linear-gradient(180deg, #f59e0b, #d97706)' : 'linear-gradient(180deg, #6366f1, #4f46e5)',
+                                                boxShadow: isHovered ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none'
                                             }}
                                         ></div>
                                     </div>
-                                    <span className="day-bar-label" style={{ fontWeight: isPeak ? '700' : '500', color: isPeak ? '#f59e0b' : 'var(--text-secondary)' }}>
+                                    <span className="day-bar-label" style={{ fontWeight: isPeak || isHovered ? '700' : '500', color: isPeak || isHovered ? '#f59e0b' : 'var(--text-secondary)' }}>
                                         {item.day}
                                     </span>
                                 </div>
