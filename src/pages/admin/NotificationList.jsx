@@ -12,7 +12,11 @@ import {
     Search,
     Clock,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight
 } from 'lucide-react';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -66,11 +70,20 @@ const NotificationList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
 
+    // Pagination States
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+
     useEffect(() => {
         if (userInfo && userInfo.isAdmin) {
             fetchNotifications();
         }
     }, [userInfo, fetchNotifications]);
+
+    // Reset pagination to page 1 on filter or search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm, itemsPerPage]);
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
@@ -97,7 +110,8 @@ const NotificationList = () => {
             const titleMatch = notif.title?.toLowerCase().includes(term);
             const msgMatch = notif.message?.toLowerCase().includes(term);
             const userMatch = notif.user?.name?.toLowerCase().includes(term) || notif.user?.email?.toLowerCase().includes(term);
-            return titleMatch || msgMatch || userMatch;
+            const orderNumberMatch = notif.meta?.orderNumber?.toLowerCase().includes(term);
+            return titleMatch || msgMatch || userMatch || orderNumberMatch;
         }
 
         return true;
@@ -105,6 +119,36 @@ const NotificationList = () => {
 
     const orderCount = notifications.filter(n => n.type === 'new_order').length;
     const userCount = notifications.filter(n => n.type === 'new_user').length;
+
+    // Pagination calculation
+    const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage) || 1;
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentNotifications = filteredNotifications.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    // Generate smart page numbers (e.g., [1, 2, 3, 4, 5])
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     const getIcon = (type) => {
         switch (type) {
@@ -293,9 +337,9 @@ const NotificationList = () => {
                 </div>
             </div>
 
-            {/* Filter Bar & Search */}
+            {/* Filter Bar, Search & Per Page */}
             <div className="glass" style={{ padding: '16px 20px', borderRadius: '14px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                     {[
                         { id: 'all', label: 'All' },
                         { id: 'unread', label: `Unread (${unreadCount})` },
@@ -324,23 +368,41 @@ const NotificationList = () => {
                     ))}
                 </div>
 
-                <div style={{ position: 'relative', minWidth: '260px' }}>
-                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-                    <input
-                        type="text"
-                        placeholder="Search notifications..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field"
-                        style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', fontSize: '13px' }}
-                    />
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Items per page selector */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Show:</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                            className="input-field"
+                            style={{ padding: '6px 10px', fontSize: '12px', borderRadius: '6px' }}
+                        >
+                            <option value={5}>5 / page</option>
+                            <option value={10}>10 / page</option>
+                            <option value={20}>20 / page</option>
+                            <option value={50}>50 / page</option>
+                        </select>
+                    </div>
+
+                    <div style={{ position: 'relative', minWidth: '240px' }}>
+                        <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search notifications..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field"
+                            style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', fontSize: '13px' }}
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Notifications List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {filteredNotifications.length > 0 ? (
-                    filteredNotifications.map((notif) => (
+                {currentNotifications.length > 0 ? (
+                    currentNotifications.map((notif) => (
                         <div
                             key={notif._id}
                             className="glass"
@@ -470,6 +532,148 @@ const NotificationList = () => {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {filteredNotifications.length > 0 && (
+                <div 
+                    className="glass" 
+                    style={{ 
+                        marginTop: '24px', 
+                        padding: '16px 24px', 
+                        borderRadius: '14px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        flexWrap: 'wrap', 
+                        gap: '16px' 
+                    }}
+                >
+                    {/* Showing summary */}
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        Showing <strong style={{ color: 'var(--text-primary)' }}>{indexOfFirstItem + 1}</strong> to{' '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{Math.min(indexOfLastItem, filteredNotifications.length)}</strong> of{' '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{filteredNotifications.length}</strong> alerts
+                    </div>
+
+                    {/* Pagination Buttons */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {/* First Page */}
+                            <button
+                                type="button"
+                                onClick={() => handlePageChange(1)}
+                                disabled={currentPage === 1}
+                                style={{
+                                    padding: '6px 8px',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    color: currentPage === 1 ? 'rgba(255, 255, 255, 0.2)' : 'var(--text-primary)',
+                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                title="First Page"
+                            >
+                                <ChevronsLeft size={16} />
+                            </button>
+
+                            {/* Previous Page */}
+                            <button
+                                type="button"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    color: currentPage === 1 ? 'rgba(255, 255, 255, 0.2)' : 'var(--text-primary)',
+                                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '13px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                <ChevronLeft size={16} />
+                                Prev
+                            </button>
+
+                            {/* Numbered Page Buttons */}
+                            {getPageNumbers().map(pageNum => (
+                                <button
+                                    key={pageNum}
+                                    type="button"
+                                    onClick={() => handlePageChange(pageNum)}
+                                    style={{
+                                        minWidth: '34px',
+                                        height: '34px',
+                                        padding: '0 8px',
+                                        borderRadius: '8px',
+                                        border: '1px solid',
+                                        borderColor: currentPage === pageNum ? 'var(--accent-color)' : 'var(--border-color)',
+                                        background: currentPage === pageNum ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.03)',
+                                        color: currentPage === pageNum ? '#ffffff' : 'var(--text-primary)',
+                                        fontWeight: currentPage === pageNum ? '700' : '500',
+                                        fontSize: '13px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    {pageNum}
+                                </button>
+                            ))}
+
+                            {/* Next Page */}
+                            <button
+                                type="button"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.2)' : 'var(--text-primary)',
+                                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '13px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Next
+                                <ChevronRight size={16} />
+                            </button>
+
+                            {/* Last Page */}
+                            <button
+                                type="button"
+                                onClick={() => handlePageChange(totalPages)}
+                                disabled={currentPage === totalPages}
+                                style={{
+                                    padding: '6px 8px',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.2)' : 'var(--text-primary)',
+                                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                title="Last Page"
+                            >
+                                <ChevronsRight size={16} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
