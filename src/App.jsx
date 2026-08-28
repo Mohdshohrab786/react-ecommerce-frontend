@@ -43,6 +43,7 @@ import CouponList from './pages/admin/CouponList';
 import BlogList from './pages/admin/BlogList';
 import BlogEdit from './pages/admin/BlogEdit';
 import NewsletterList from './pages/admin/NewsletterList';
+import NotificationList from './pages/admin/NotificationList';
 import ScrollToTop from './components/ScrollToTop';
 import { useSettingsStore } from './store/useSettingsStore';
 import WishlistPage from './pages/WishlistPage';
@@ -169,6 +170,7 @@ function App() {
             <Route path="/admin/bloglist" element={<BlogList />} />
             <Route path="/admin/blog/:id/edit" element={<BlogEdit />} />
             <Route path="/admin/newsletter" element={<NewsletterList />} />
+            <Route path="/admin/notifications" element={<NotificationList />} />
           </Route>
         </Route>
 

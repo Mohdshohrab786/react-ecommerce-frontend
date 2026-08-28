@@ -1,13 +1,15 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Package, Users, Settings, Tag, Image as ImageIcon, CreditCard, FileText, Globe, LogOut, Mail } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Package, Users, Settings, Tag, Image as ImageIcon, CreditCard, FileText, Globe, LogOut, Mail, Bell } from 'lucide-react';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 const AdminSidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { settings } = useSettingsStore();
     const { logout } = useAuthStore();
+    const { unreadCount } = useNotificationStore();
     const brandName = settings?.websiteName || 'SuperMarket';
 
     const logoutHandler = () => {
@@ -17,6 +19,12 @@ const AdminSidebar = () => {
 
     const menuItems = [
         { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
+        { 
+            name: 'Notifications', 
+            path: '/admin/notifications', 
+            icon: <Bell size={20} />, 
+            badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null 
+        },
         { name: 'Orders', path: '/admin/orderlist', icon: <ShoppingBag size={20} /> },
         { name: 'Products', path: '/admin/productlist', icon: <Package size={20} /> },
         { name: 'Categories', path: '/admin/categories', icon: <Tag size={20} /> },
@@ -96,8 +104,25 @@ const AdminSidebar = () => {
                             if (!isActive) e.currentTarget.style.background = 'transparent';
                         }}
                     >
-                        {item.icon}
-                        {item.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                            {item.icon}
+                            <span>{item.name}</span>
+                        </div>
+                        {item.badge && (
+                            <span style={{
+                                background: '#ef4444',
+                                color: '#ffffff',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                padding: '2px 7px',
+                                borderRadius: '10px',
+                                minWidth: '18px',
+                                textAlign: 'center',
+                                lineHeight: '1.3'
+                            }}>
+                                {item.badge}
+                            </span>
+                        )}
                     </Link>
                 );
             })}
