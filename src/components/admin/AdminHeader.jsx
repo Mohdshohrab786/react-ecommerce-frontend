@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield, Menu } from 'lucide-react';
+import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield, Menu, Globe } from 'lucide-react';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import './AdminHeader.css';
@@ -127,6 +127,18 @@ const AdminHeader = ({ onToggleSidebar }) => {
             </div>
 
             <div className="admin-header-actions" ref={dropdownRef}>
+                {/* View Website Button */}
+                <a
+                    href="/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-view-site-btn"
+                    title="View Live Website (Opens in new tab)"
+                >
+                    <Globe size={16} />
+                    <span>View Website</span>
+                </a>
+
                 {/* Notification Bell Button */}
                 <button
                     type="button"

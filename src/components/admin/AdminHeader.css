@@ -64,8 +64,31 @@
 .admin-header-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     position: relative;
+}
+
+.admin-view-site-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.admin-view-site-btn:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #818cf8;
+    transform: translateY(-1px);
 }
 
 .admin-notif-btn {
@@ -385,10 +408,20 @@
 
 @media (max-width: 640px) {
     .admin-header-title h2 {
-        font-size: 15px;
+        font-size: 14px;
     }
     .admin-header-actions {
-        gap: 10px;
+        gap: 8px;
+    }
+    .admin-view-site-btn {
+        padding: 8px;
+        width: 38px;
+        height: 38px;
+        justify-content: center;
+        border-radius: 10px;
+    }
+    .admin-view-site-btn span {
+        display: none;
     }
     .admin-notif-dropdown {
         width: calc(100vw - 20px);
