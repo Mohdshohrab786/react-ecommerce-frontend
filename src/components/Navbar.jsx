@@ -464,51 +464,79 @@ const Navbar = () => {
                                                 const iconBg = gradientColors[idx % gradientColors.length];
 
                                                 return (
-                                                    <Link 
-                                                        key={cat._id} 
-                                                        to={`/category/${cat.slug}`} 
-                                                        className="mega-category-card"
-                                                    >
-                                                        <div className="cat-card-icon-wrap" style={{ background: iconBg }}>
-                                                            {cat.image ? (
-                                                                <img 
-                                                                    src={cat.image.startsWith('http') ? cat.image : `${window.API_BASE_URL}${cat.image}`} 
-                                                                    alt={cat.name} 
-                                                                    className="cat-thumb-img" 
-                                                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                                                />
-                                                            ) : null}
-                                                            <span className="cat-initial-badge">
-                                                                {cat.name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                        <div className="cat-card-info">
-                                                            <h4 className="cat-card-name">
-                                                                {cat.name}
-                                                            </h4>
-                                                            {cat.children && cat.children.length > 0 ? (
-                                                                <span className="cat-sub-count">
-                                                                    {cat.children.length} sub-categories
+                                                    <div key={cat._id} className="mega-cat-column">
+                                                        <Link to={`/category/${cat.slug}`} className="mega-cat-col-header">
+                                                            <div className="cat-header-icon" style={{ background: iconBg }}>
+                                                                {cat.image ? (
+                                                                    <img 
+                                                                        src={cat.image.startsWith('http') ? cat.image : `${window.API_BASE_URL}${cat.image}`} 
+                                                                        alt={cat.name} 
+                                                                        className="cat-thumb-img" 
+                                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                                    />
+                                                                ) : null}
+                                                                <span className="cat-initial-badge">
+                                                                    {cat.name.charAt(0).toUpperCase()}
                                                                 </span>
-                                                            ) : (
-                                                                <span className="cat-card-shop-now">
-                                                                    Shop Now <ChevronRight size={11} />
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </Link>
+                                                            </div>
+                                                            <span className="cat-header-title">{cat.name}</span>
+                                                            <ChevronRight size={13} className="cat-header-arrow" />
+                                                        </Link>
+
+                                                        {cat.children && cat.children.length > 0 ? (
+                                                            <ul className="mega-subcat-list">
+                                                                {cat.children.map(sub => (
+                                                                    <li key={sub._id}>
+                                                                        <Link to={`/category/${sub.slug}`} className="mega-subcat-link">
+                                                                            <ChevronRight size={11} className="sub-bullet-icon" />
+                                                                            <span>{sub.name}</span>
+                                                                        </Link>
+                                                                    </li>
+                                                                ))}
+                                                                <li>
+                                                                    <Link to={`/category/${cat.slug}`} className="mega-view-all-subcat">
+                                                                        View all {cat.name} &rarr;
+                                                                    </Link>
+                                                                </li>
+                                                            </ul>
+                                                        ) : (
+                                                            <ul className="mega-subcat-list">
+                                                                <li>
+                                                                    <Link to={`/category/${cat.slug}`} className="mega-subcat-link explore-link">
+                                                                        <ChevronRight size={11} className="sub-bullet-icon" />
+                                                                        <span>Explore Collection</span>
+                                                                    </Link>
+                                                                </li>
+                                                            </ul>
+                                                        )}
+                                                    </div>
                                                 );
                                             }) : (
-                                                ['Electronics', 'Fashion', 'Home Decor', 'Accessories', 'Footwear', 'Beauty'].map(name => (
-                                                    <Link key={name} to="/shop" className="mega-category-card">
-                                                        <div className="cat-card-icon-wrap" style={{ background: '#fff7ed' }}>
-                                                            <span className="cat-initial-badge">{name.charAt(0)}</span>
-                                                        </div>
-                                                        <div className="cat-card-info">
-                                                            <h4 className="cat-card-name">{name}</h4>
-                                                            <span className="cat-card-shop-now">Shop Now <ChevronRight size={11} /></span>
-                                                        </div>
-                                                    </Link>
+                                                [
+                                                    { name: 'Jewellery', subs: ['Earrings', 'Necklaces', 'Rings', 'Bangles'] },
+                                                    { name: 'Electronics', subs: ['Audio', 'Smart Watches', 'Accessories'] },
+                                                    { name: 'Clothing', subs: ['Men Wear', 'Women Wear', 'Ethnic Wear'] },
+                                                    { name: 'Home Decor', subs: ['Candles', 'Fragrances', 'Handmade Art'] }
+                                                ].map((cat, idx) => (
+                                                    <div key={idx} className="mega-cat-column">
+                                                        <Link to="/shop" className="mega-cat-col-header">
+                                                            <div className="cat-header-icon" style={{ background: '#ffedd5' }}>
+                                                                <span className="cat-initial-badge">{cat.name.charAt(0)}</span>
+                                                            </div>
+                                                            <span className="cat-header-title">{cat.name}</span>
+                                                            <ChevronRight size={13} className="cat-header-arrow" />
+                                                        </Link>
+                                                        <ul className="mega-subcat-list">
+                                                            {cat.subs.map((s, sIdx) => (
+                                                                <li key={sIdx}>
+                                                                    <Link to="/shop" className="mega-subcat-link">
+                                                                        <ChevronRight size={11} className="sub-bullet-icon" />
+                                                                        <span>{s}</span>
+                                                                    </Link>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
                                                 ))
                                             )}
                                         </div>
