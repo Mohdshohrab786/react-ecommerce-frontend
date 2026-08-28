@@ -9,7 +9,6 @@ import {
     Image as ImageIcon, 
     CreditCard, 
     FileText, 
-    Globe, 
     LogOut, 
     Mail, 
     Bell,
@@ -149,33 +148,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                 })}
             </div>
 
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '12px 0' }} />
-
-            <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleItemClick}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '10px 14px',
-                    borderRadius: '10px',
-                    color: 'var(--text-primary)',
-                    background: 'transparent',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                    fontSize: '13.5px',
-                    transition: 'all 0.2s ease',
-                    marginTop: 'auto'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            >
-                <Globe size={20} />
-                View Website
-            </a>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0 8px 0', marginTop: 'auto' }} />
             
             <button
                 onClick={logoutHandler}
@@ -192,8 +165,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
                     fontWeight: '600',
                     fontSize: '13.5px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    marginTop: '4px'
+                    transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
