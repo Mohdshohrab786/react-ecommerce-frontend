@@ -16,7 +16,10 @@ import {
     AlertCircle,
     X as CloseIcon,
     Package,
-    Printer
+    Printer,
+    Trash2,
+    CheckSquare,
+    Square
 } from 'lucide-react';
 import { generateInvoice } from '../../utils/invoiceGenerator';
 import './Admin.css';
@@ -30,6 +33,12 @@ const OrderList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [payFilter, setPayFilter] = useState('all');
     const [deliverFilter, setDeliverFilter] = useState('all');
+
+    // Bulk selection & Deletion States
+    const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Pagination States
     const [currentPage, setCurrentPage] = useState(1);
@@ -98,84 +107,104 @@ const OrderList = () => {
             setErrorUpdating(null);
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             
-            let responseData;
             if (actionType === 'pay') {
-                const { data } = await axios.put(`${window.API_BASE_URL}/api/orders/${selectedOrder._id}/pay`, {}, config);
-                responseData = data;
-                showToast(`Order #${selectedOrder._id.substring(0, 8)} marked as Paid!`, 'success');
+                await axios.put(`${window.API_BASE_URL}/api/orders/${selectedOrder._id}/pay`, {}, config);
+                showToast(`Order #${selectedOrder.orderNumber || selectedOrder._id.substring(0, 8)} marked as PAID!`);
             } else if (actionType === 'deliver') {
-                const { data } = await axios.put(`${window.API_BASE_URL}/api/orders/${selectedOrder._id}/deliver`, {}, config);
-                responseData = data;
-                showToast(`Order #${selectedOrder._id.substring(0, 8)} marked as Delivered!`, 'success');
+                await axios.put(`${window.API_BASE_URL}/api/orders/${selectedOrder._id}/deliver`, {}, config);
+                showToast(`Order #${selectedOrder.orderNumber || selectedOrder._id.substring(0, 8)} marked as DELIVERED!`);
             }
 
-            // Update local state dynamically without full reload
-            setOrders(prevOrders => 
-                prevOrders.map(order => order._id === selectedOrder._id ? responseData : order)
-            );
-            
             setModalOpen(false);
             setSelectedOrder(null);
-            setActionType(null);
+            fetchOrders();
         } catch (err) {
-            setErrorUpdating(err.response?.data?.message || err.message);
+            setErrorUpdating(err.response && err.response.data.message ? err.response.data.message : err.message);
         } finally {
             setUpdating(false);
         }
     };
 
+    // Open Details Modal
+    const openDetailsModal = (order) => {
+        setViewOrderDetails(order);
+        setSelectedStatus(order.status || (order.isDelivered ? 'Delivered' : 'Pending'));
+    };
+
+    // Update Status from Details Modal
     const handleUpdateStatus = async () => {
         if (!viewOrderDetails || !selectedStatus) return;
-        
         try {
             setUpdatingStatus(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            
-            const { data } = await axios.put(`${window.API_BASE_URL}/api/orders/${viewOrderDetails._id}/status`, {
-                status: selectedStatus
-            }, config);
-
-            // Update local state dynamically
-            setOrders(prevOrders => 
-                prevOrders.map(order => order._id === viewOrderDetails._id ? data : order)
-            );
-            
-            setViewOrderDetails(data); // update modal data too
-            showToast(`Order Status updated to ${selectedStatus}!`, 'success');
+            const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
+            const { data } = await axios.put(`${window.API_BASE_URL}/api/orders/${viewOrderDetails._id}/status`, { status: selectedStatus }, config);
+            showToast(`Order status updated to: ${selectedStatus}`);
+            setViewOrderDetails(data);
+            fetchOrders();
         } catch (err) {
-            showToast(err.response?.data?.message || 'Error updating status', 'error');
+            showToast(err.response?.data?.message || err.message, 'error');
         } finally {
             setUpdatingStatus(false);
         }
     };
 
-    // KPI Metrics calculation
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((acc, item) => acc + (item.isPaid ? item.totalPrice : 0), 0);
-    const pendingPayments = orders.filter(o => !o.isPaid).length;
-    const pendingDeliveries = orders.filter(o => o.isPaid && !o.isDelivered).length;
+    // Single / Bulk Delete Handlers
+    const openDeleteModal = (order = null) => {
+        setOrderToDelete(order);
+        setDeleteModalOpen(true);
+    };
 
-    // Filters and Search Application
+    const handleConfirmDelete = async () => {
+        try {
+            setDeleting(true);
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+
+            if (orderToDelete) {
+                // Delete single order
+                await axios.delete(`${window.API_BASE_URL}/api/orders/${orderToDelete._id}`, config);
+                showToast(`Order #${orderToDelete.orderNumber || orderToDelete._id.substring(0, 8)} deleted successfully`);
+                setSelectedOrderIds(prev => prev.filter(id => id !== orderToDelete._id));
+            } else if (selectedOrderIds.length > 0) {
+                // Bulk delete selected orders
+                const { data } = await axios.post(`${window.API_BASE_URL}/api/orders/bulk-delete`, { orderIds: selectedOrderIds }, config);
+                showToast(data.message || `${selectedOrderIds.length} orders deleted successfully`);
+                setSelectedOrderIds([]);
+            }
+
+            setDeleteModalOpen(false);
+            setOrderToDelete(null);
+            fetchOrders();
+        } catch (err) {
+            showToast(err.response?.data?.message || err.message, 'error');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    // Filter Logic
     const filteredOrders = orders.filter((order) => {
-        const matchesSearch = 
-            order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (order.orderNumber && order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (order.user && order.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        const orderIdStr = order.orderNumber ? order.orderNumber.toLowerCase() : '';
+        const orderMongoId = order._id ? order._id.toLowerCase() : '';
+        const userName = order.user?.name ? order.user.name.toLowerCase() : '';
+        const userEmail = order.user?.email ? order.user.email.toLowerCase() : '';
+        const search = searchTerm.toLowerCase();
+        
+        const matchesSearch = orderIdStr.includes(search) || orderMongoId.includes(search) || userName.includes(search) || userEmail.includes(search);
+        
+        // Payment Filter
+        let matchesPay = true;
+        if (payFilter === 'paid') matchesPay = order.isPaid;
+        if (payFilter === 'unpaid') matchesPay = !order.isPaid;
 
-        const matchesPay = 
-            payFilter === 'all' ? true :
-            payFilter === 'paid' ? order.isPaid :
-            !order.isPaid;
-
-        const matchesDeliver = 
-            deliverFilter === 'all' ? true :
-            deliverFilter === 'delivered' ? order.isDelivered :
-            !order.isDelivered;
+        // Delivery Filter
+        let matchesDeliver = true;
+        if (deliverFilter === 'delivered') matchesDeliver = order.isDelivered;
+        if (deliverFilter === 'pending') matchesDeliver = !order.isDelivered;
 
         return matchesSearch && matchesPay && matchesDeliver;
     });
 
-    // Pagination calculations
+    // Pagination Logic
     const indexOfLastOrder = currentPage * ordersPerPage;
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
     const currentOrdersList = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -183,108 +212,155 @@ const OrderList = () => {
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const openDetailsModal = (order) => {
-        setViewOrderDetails(order);
-        setSelectedStatus(order.status || 'Pending');
+    // Toggle Single Row Selection
+    const handleSelectOrder = (id) => {
+        setSelectedOrderIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
     };
 
-    const statusOptions = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Refunded'];
+    // Toggle Select All Visible Orders on Current Page
+    const handleSelectAllCurrentPage = () => {
+        const currentIds = currentOrdersList.map(o => o._id);
+        const allSelected = currentIds.length > 0 && currentIds.every(id => selectedOrderIds.includes(id));
+        if (allSelected) {
+            setSelectedOrderIds(prev => prev.filter(id => !currentIds.includes(id)));
+        } else {
+            setSelectedOrderIds(prev => [...new Set([...prev, ...currentIds])]);
+        }
+    };
+
+    // Summary Statistics
+    const totalOrdersCount = orders.length;
+    const totalRevenue = orders.reduce((acc, order) => acc + (order.isPaid ? order.totalPrice : 0), 0);
+    const totalPendingDelivery = orders.filter(o => !o.isDelivered).length;
+    const totalUnpaid = orders.filter(o => !o.isPaid).length;
 
     return (
-        <div className="fade-in">
+        <div className="fade-in pb-8">
             {/* Custom Toast Notification */}
             {toast.visible && (
-                <div style={{
-                    position: 'fixed',
-                    top: '24px',
-                    right: '24px',
-                    backgroundColor: toast.type === 'success' ? '#10b981' : '#ef4444',
-                    color: 'white',
-                    padding: '16px 24px',
-                    zIndex: 2000,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    fontWeight: 500,
-                    animation: 'fadeIn 0.2s ease',
-                    borderRadius: '8px'
-                }}>
-                    {toast.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                <div className="admin-toast" style={{ borderColor: toast.type === 'error' ? '#ef4444' : '#10b981' }}>
+                    {toast.type === 'error' ? <AlertCircle size={20} color="#ef4444" /> : <CheckCircle size={20} color="#10b981" />}
                     <span>{toast.message}</span>
                 </div>
             )}
 
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div className="admin-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                    <h1 className="section-title" style={{ margin: 0 }}>Orders Management</h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-                        Track, monitor and update customer orders
+                    <h1 className="section-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <ShoppingBag size={24} color="var(--accent-color)" /> Orders Management
+                    </h1>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        Manage, filter, fulfill, download invoices, and delete customer orders.
                     </p>
                 </div>
-                <button 
-                    onClick={fetchOrders} 
-                    className="btn-secondary" 
-                    style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}
-                >
-                    <RotateCw size={14} /> Refresh
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button 
+                        onClick={fetchOrders} 
+                        className="btn-secondary" 
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px' }}
+                        title="Refresh Orders"
+                    >
+                        <RotateCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                    </button>
+                </div>
             </div>
 
-            {/* KPI Cards */}
+            {/* KPI Summary Cards */}
             <div className="order-stats-container">
-                <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
+                <div className="order-stat-card glass">
+                    <div className="stat-icon-wrapper" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-color)' }}>
                         <ShoppingBag size={24} />
                     </div>
-                    <div className="order-stat-info">
-                        <p>Total Orders</p>
-                        <h3>{totalOrders}</h3>
+                    <div className="stat-content">
+                        <div className="stat-label">Total Orders</div>
+                        <div className="stat-value">{totalOrdersCount}</div>
                     </div>
                 </div>
 
-                <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                <div className="order-stat-card glass">
+                    <div className="stat-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
                         <Banknote size={24} />
                     </div>
-                    <div className="order-stat-info">
-                        <p>Total Revenue</p>
-                        <h3>{currency}{totalRevenue.toFixed(2)}</h3>
+                    <div className="stat-content">
+                        <div className="stat-label">Total Paid Revenue</div>
+                        <div className="stat-value">{currency}{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
 
-                <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>
+                <div className="order-stat-card glass">
+                    <div className="stat-icon-wrapper" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
                         <Clock size={24} />
                     </div>
-                    <div className="order-stat-info">
-                        <p>Unpaid Orders</p>
-                        <h3>{pendingPayments}</h3>
+                    <div className="stat-content">
+                        <div className="stat-label">Pending Delivery</div>
+                        <div className="stat-value">{totalPendingDelivery}</div>
                     </div>
                 </div>
 
-                <div className="order-stat-card">
-                    <div className="order-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-                        <Truck size={24} />
+                <div className="order-stat-card glass">
+                    <div className="stat-icon-wrapper" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                        <AlertCircle size={24} />
                     </div>
-                    <div className="order-stat-info">
-                        <p>Pending Delivery</p>
-                        <h3>{pendingDeliveries}</h3>
+                    <div className="stat-content">
+                        <div className="stat-label">Unpaid Orders</div>
+                        <div className="stat-value">{totalUnpaid}</div>
                     </div>
                 </div>
             </div>
 
-            {/* Search and Filters */}
-            <div className="order-controls glass" style={{ padding: '20px', marginBottom: '24px' }}>
+            {/* Sticky Bulk Selection Toolbar */}
+            {selectedOrderIds.length > 0 && (
+                <div className="bulk-actions-bar">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span className="badge badge-info" style={{ padding: '6px 12px', fontSize: '13px' }}>
+                            {selectedOrderIds.length} Order(s) Selected
+                        </span>
+                        <button 
+                            type="button" 
+                            onClick={() => setSelectedOrderIds([])}
+                            className="btn-secondary"
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                        >
+                            Deselect All
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => openDeleteModal(null)}
+                        style={{ 
+                            background: '#ef4444', 
+                            color: '#ffffff', 
+                            border: 'none', 
+                            padding: '8px 18px', 
+                            borderRadius: '8px', 
+                            fontWeight: '600', 
+                            fontSize: '13px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '6px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                        }}
+                    >
+                        <Trash2 size={15} /> Delete Selected ({selectedOrderIds.length})
+                    </button>
+                </div>
+            )}
+
+            {/* Search & Filter Controls */}
+            <div className="order-controls glass" style={{ padding: '16px 20px', marginBottom: '24px' }}>
                 <div className="search-wrapper">
-                    <Search size={18} className="search-icon" />
+                    <Search className="search-icon" size={18} />
                     <input 
                         type="text" 
-                        placeholder="Search by Order ID or User name..." 
-                        value={searchTerm}
+                        placeholder="Search by Order ID, Customer Name, or Email..." 
+                        value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
                     />
@@ -323,6 +399,15 @@ const OrderList = () => {
                     <table className="admin-table">
                         <thead>
                             <tr>
+                                <th style={{ width: '40px', textAlign: 'center' }}>
+                                    <input 
+                                        type="checkbox"
+                                        checked={currentOrdersList.length > 0 && currentOrdersList.every(o => selectedOrderIds.includes(o._id))}
+                                        onChange={handleSelectAllCurrentPage}
+                                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--accent-color)' }}
+                                        title="Select all on this page"
+                                    />
+                                </th>
                                 <th>ORDER ID</th>
                                 <th>USER</th>
                                 <th>DATE</th>
@@ -334,28 +419,45 @@ const OrderList = () => {
                         </thead>
                         <tbody>
                             {currentOrdersList.map((order) => (
-                                <tr key={order._id}>
+                                <tr key={order._id} style={{ background: selectedOrderIds.includes(order._id) ? 'rgba(99, 102, 241, 0.08)' : 'transparent' }}>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={selectedOrderIds.includes(order._id)}
+                                            onChange={() => handleSelectOrder(order._id)}
+                                            style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--accent-color)' }}
+                                        />
+                                    </td>
                                     <td style={{ fontWeight: 600, fontSize: '14px' }}>
                                         #{order.orderNumber || order._id.substring(0, 8).toUpperCase()}
                                     </td>
-                                    <td>{order.user ? order.user.name : <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Deleted User</span>}</td>
-                                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                                    <td style={{ fontWeight: 700 }}>{currency}{order.totalPrice.toFixed(2)}</td>
+                                    <td>
+                                        <div style={{ fontWeight: 500 }}>
+                                            {order.user ? order.user.name : (order.shippingAddress?.name || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Customer</span>)}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                            {order.user?.email || ''}
+                                        </div>
+                                    </td>
+                                    <td style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                                        {new Date(order.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td style={{ fontWeight: 700 }}>{currency}{order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
                                     <td>
                                         {order.isPaid ? (
                                             <span className="badge badge-success">
-                                                <Check size={12} /> Paid ({new Date(order.paidAt).toLocaleDateString()})
+                                                <Check size={12} /> Paid
                                             </span>
                                         ) : (
                                             <span className="badge badge-danger">
-                                                <X size={12} /> Unpaid
+                                                <X size={12} /> {order.paymentMethod === 'COD' ? 'COD (Unpaid)' : 'Unpaid'}
                                             </span>
                                         )}
                                     </td>
                                     <td>
                                         {order.isDelivered ? (
                                             <span className="badge badge-info">
-                                                <Truck size={12} /> Delivered ({new Date(order.deliveredAt).toLocaleDateString()})
+                                                <Truck size={12} /> Delivered
                                             </span>
                                         ) : (
                                             <span className="badge badge-warning">
@@ -364,11 +466,11 @@ const OrderList = () => {
                                         )}
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
                                             <button 
                                                 onClick={() => generateInvoice(order, settings)}
                                                 className="btn-secondary" 
-                                                style={{ padding: '8px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                style={{ padding: '7px 11px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                                 title="Print or Download Invoice"
                                             >
                                                 <Printer size={13} /> Invoice
@@ -377,7 +479,7 @@ const OrderList = () => {
                                                 <button 
                                                     onClick={() => openConfirmModal(order, 'pay')}
                                                     className="btn-primary" 
-                                                    style={{ padding: '8px 12px', fontSize: '12px' }}
+                                                    style={{ padding: '7px 11px', fontSize: '12px' }}
                                                 >
                                                     Mark Paid
                                                 </button>
@@ -386,7 +488,7 @@ const OrderList = () => {
                                                 <button 
                                                     onClick={() => openConfirmModal(order, 'deliver')}
                                                     className="btn-primary" 
-                                                    style={{ padding: '8px 12px', fontSize: '12px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
+                                                    style={{ padding: '7px 11px', fontSize: '12px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
                                                 >
                                                     Mark Delivered
                                                 </button>
@@ -394,8 +496,17 @@ const OrderList = () => {
                                             <button 
                                                 onClick={() => openDetailsModal(order)}
                                                 className="btn-secondary" 
-                                                style={{ padding: '8px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                style={{ padding: '7px 11px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                            >
                                                 <Eye size={12} /> Details
+                                            </button>
+                                            <button 
+                                                onClick={() => openDeleteModal(order)}
+                                                className="btn-secondary" 
+                                                style={{ padding: '7px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                                                title="Delete Order"
+                                            >
+                                                <Trash2 size={13} />
                                             </button>
                                         </div>
                                     </td>
@@ -403,7 +514,7 @@ const OrderList = () => {
                             ))}
                             {filteredOrders.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' }}>
+                                    <td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' }}>
                                         No orders found matching your search.
                                     </td>
                                 </tr>
@@ -413,12 +524,12 @@ const OrderList = () => {
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', padding: '20px 0 10px 0', borderTop: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '20px', padding: '20px 0 10px 0', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
                             <button 
                                 disabled={currentPage === 1}
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 className="btn-secondary"
-                                style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+                                style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
                             >
                                 &larr; Prev
                             </button>
@@ -428,9 +539,9 @@ const OrderList = () => {
                                     onClick={() => handlePageChange(x + 1)}
                                     className={currentPage === x + 1 ? "btn-primary" : "btn-secondary"}
                                     style={{ 
-                                        width: '28px', 
-                                        height: '28px', 
-                                        borderRadius: '4px', 
+                                        width: '32px', 
+                                        height: '32px', 
+                                        borderRadius: '6px', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         justifyContent: 'center', 
@@ -447,7 +558,7 @@ const OrderList = () => {
                                 disabled={currentPage === totalPages}
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 className="btn-secondary"
-                                style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: currentPage === totalPages ? 'default' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+                                style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: currentPage === totalPages ? 'default' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
                             >
                                 Next &rarr;
                             </button>
@@ -461,40 +572,27 @@ const OrderList = () => {
                 <div className="admin-modal-overlay">
                     <div className="admin-modal">
                         <h2 className="modal-title">
-                            Confirm Order Update
+                            {actionType === 'pay' ? 'Confirm Payment Update' : 'Confirm Delivery Update'}
                         </h2>
                         <p className="modal-text">
-                            Are you sure you want to mark Order <strong>#{selectedOrder._id}</strong> as{' '}
+                            Are you sure you want to mark Order <strong>#{selectedOrder.orderNumber || selectedOrder._id.substring(0, 8)}</strong> as 
                             <strong style={{ color: actionType === 'pay' ? '#10b981' : '#3b82f6' }}>
-                                {actionType === 'pay' ? 'PAID' : 'DELIVERED'}
-                            </strong>? This action will update the database permanently.
+                                {actionType === 'pay' ? ' PAID' : ' DELIVERED'}
+                            </strong>?
                         </p>
-                        {errorUpdating && (
-                            <div style={{ color: '#ef4444', marginBottom: '16px', fontSize: '14px', background: '#fdf2f2', padding: '10px' }}>
-                                {errorUpdating}
-                            </div>
-                        )}
+                        {errorUpdating && <div className="error-message" style={{ marginBottom: '16px' }}>{errorUpdating}</div>}
                         <div className="modal-actions">
                             <button 
                                 onClick={() => setModalOpen(false)} 
-                                className="btn-secondary" 
-                                style={{ padding: '10px 20px', fontSize: '13px' }}
+                                className="btn-secondary"
                                 disabled={updating}
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleConfirmUpdate} 
-                                className="btn-primary" 
-                                style={{ 
-                                    padding: '10px 20px', 
-                                    fontSize: '13px', 
-                                    backgroundColor: actionType === 'pay' ? '#10b981' : '#3b82f6', 
-                                    borderColor: actionType === 'pay' ? '#10b981' : '#3b82f6',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
+                                className="btn-primary"
+                                style={{ backgroundColor: actionType === 'pay' ? 'var(--accent-color)' : '#3b82f6' }}
                                 disabled={updating}
                             >
                                 {updating ? 'Updating...' : 'Confirm'}
@@ -504,10 +602,67 @@ const OrderList = () => {
                 </div>
             )}
 
+            {/* Delete Confirmation Modal (Single & Bulk) */}
+            {deleteModalOpen && (
+                <div className="admin-modal-overlay" style={{ zIndex: 1600 }}>
+                    <div className="admin-modal" style={{ maxWidth: '460px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#ef4444' }}>
+                            <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Trash2 size={22} />
+                            </div>
+                            <h2 style={{ fontSize: '20px', margin: 0, fontWeight: '700', color: 'var(--text-primary)' }}>
+                                {orderToDelete ? 'Delete Order' : `Delete ${selectedOrderIds.length} Orders?`}
+                            </h2>
+                        </div>
+                        <p className="modal-text" style={{ color: 'var(--text-secondary)' }}>
+                            {orderToDelete ? (
+                                <>
+                                    Are you sure you want to delete Order <strong style={{ color: 'var(--text-primary)' }}>#{orderToDelete.orderNumber || orderToDelete._id.substring(0, 8)}</strong>?
+                                </>
+                            ) : (
+                                <>
+                                    Are you sure you want to permanently delete all <strong style={{ color: 'var(--text-primary)' }}>{selectedOrderIds.length}</strong> selected orders?
+                                </>
+                            )}
+                            <br /><br />
+                            <span style={{ color: '#ef4444', fontSize: '13px', fontWeight: '500' }}>
+                                ⚠️ Warning: This action cannot be undone and will remove all associated order history.
+                            </span>
+                        </p>
+                        <div className="modal-actions">
+                            <button 
+                                type="button"
+                                onClick={() => setDeleteModalOpen(false)} 
+                                className="btn-secondary"
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={handleConfirmDelete} 
+                                style={{
+                                    background: '#ef4444',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    padding: '10px 22px',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                                disabled={deleting}
+                            >
+                                {deleting ? 'Deleting...' : 'Yes, Delete Permanently'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Inline Order Details & Status Update Modal */}
             {viewOrderDetails && (
                 <div className="admin-modal-overlay" style={{ zIndex: 1500 }}>
-                    <div className="admin-modal" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div className="admin-modal" style={{ maxWidth: '800px', width: '92%', maxHeight: '90vh', overflowY: 'auto' }}>
                         
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                             <h2 style={{ fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
@@ -529,14 +684,14 @@ const OrderList = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                             {/* Summary Block */}
                             <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                 <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Summary</h3>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Order ID:</strong> #{viewOrderDetails.orderNumber || viewOrderDetails._id.substring(0, 8).toUpperCase()}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Date:</strong> {new Date(viewOrderDetails.createdAt).toLocaleString()}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Customer:</strong> {viewOrderDetails.user?.name || 'Unknown'}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Email:</strong> {viewOrderDetails.user?.email || 'Unknown'}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Customer:</strong> {viewOrderDetails.user?.name || viewOrderDetails.shippingAddress?.name || 'Customer'}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Email:</strong> {viewOrderDetails.user?.email || 'N/A'}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Payment:</strong> {viewOrderDetails.paymentMethod}</p>
                             </div>
 
@@ -546,7 +701,7 @@ const OrderList = () => {
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Address:</strong> {viewOrderDetails.shippingAddress?.address}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>City:</strong> {viewOrderDetails.shippingAddress?.city}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Postal Code:</strong> {viewOrderDetails.shippingAddress?.postalCode}</p>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Country:</strong> {viewOrderDetails.shippingAddress?.country}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--text-secondary)' }}><strong style={{ color: 'var(--text-primary)' }}>Phone:</strong> {viewOrderDetails.shippingAddress?.phone || 'N/A'}</p>
                             </div>
                         </div>
 
@@ -564,15 +719,20 @@ const OrderList = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {viewOrderDetails.orderItems && viewOrderDetails.orderItems.map((item, index) => (
-                                            <tr key={index}>
-                                                <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <img src={item.image?.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image}`} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px' }} />
-                                                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{item.name}</span>
+                                        {viewOrderDetails.orderItems?.map((item, idx) => (
+                                            <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                                <td style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <img 
+                                                        src={item.image && item.image.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image || '/images/sample.jpg'}`} 
+                                                        alt={item.name} 
+                                                        style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }}
+                                                        onError={(e) => { e.target.src = '/images/sample.jpg'; }}
+                                                    />
+                                                    <span style={{ fontWeight: 500 }}>{item.name}</span>
                                                 </td>
-                                                <td style={{ padding: '12px 16px', textAlign: 'center', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{item.qty}</td>
-                                                <td style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>{currency}{item.price?.toFixed(2)}</td>
-                                                <td style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', fontWeight: 600, color: 'var(--text-primary)' }}>{currency}{(item.qty * item.price)?.toFixed(2)}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>{item.qty}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'right' }}>{currency}{item.price?.toFixed(2)}</td>
+                                                <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{currency}{(item.qty * item.price)?.toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -580,63 +740,68 @@ const OrderList = () => {
                             </div>
                         </div>
 
-                        {/* Order Summary Financials & Status Manager */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
-                            
-                            {/* Update Status Form */}
-                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Update Order Status</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>Current Lifecycle Status</label>
-                                        <select 
-                                            value={selectedStatus}
-                                            onChange={(e) => setSelectedStatus(e.target.value)}
-                                            className="filter-select"
-                                            style={{ width: '100%' }}
-                                        >
-                                            {statusOptions.map(opt => (
-                                                <option key={opt} value={opt}>{opt}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <button 
-                                        onClick={handleUpdateStatus}
-                                        disabled={updatingStatus || selectedStatus === (viewOrderDetails.status || 'Pending')}
-                                        className="btn-primary"
-                                        style={{ padding: '10px', fontSize: '13px', width: '100%', textAlign: 'center' }}
+                        {/* Order Totals & Change Status Control */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <div>
+                                <h3 style={{ fontSize: '13px', marginBottom: '8px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Update Delivery Status</h3>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <select 
+                                        value={selectedStatus} 
+                                        onChange={(e) => setSelectedStatus(e.target.value)}
+                                        className="filter-select"
+                                        style={{ minWidth: '160px', padding: '8px 12px' }}
                                     >
-                                        {updatingStatus ? 'Updating...' : 'Save New Status'}
+                                        <option value="Pending">Pending</option>
+                                        <option value="Processing">Processing</option>
+                                        <option value="Shipped">Shipped</option>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                    <button 
+                                        onClick={handleUpdateStatus} 
+                                        className="btn-primary" 
+                                        disabled={updatingStatus}
+                                        style={{ padding: '8px 16px', fontSize: '13px' }}
+                                    >
+                                        {updatingStatus ? 'Saving...' : 'Save Status'}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Totals */}
-                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                                <h3 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Totals</h3>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                    <span>Items Subtotal:</span>
-                                    <span>{currency}{viewOrderDetails.itemsPrice?.toFixed(2)}</span>
+                            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    Items Subtotal: <strong>{currency}{(viewOrderDetails.itemsPrice || 0).toFixed(2)}</strong>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                    <span>Shipping:</span>
-                                    <span>{currency}{viewOrderDetails.shippingPrice?.toFixed(2)}</span>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    Shipping Fee: <strong>{currency}{(viewOrderDetails.shippingPrice || 0).toFixed(2)}</strong>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                    <span>Tax:</span>
-                                    <span>{currency}{viewOrderDetails.taxPrice?.toFixed(2)}</span>
-                                </div>
-                                {viewOrderDetails.discountAmount > 0 && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: '#10b981', fontWeight: 600 }}>
-                                        <span>Discount:</span>
-                                        <span>-{currency}{viewOrderDetails.discountAmount?.toFixed(2)}</span>
-                                    </div>
-                                )}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                                    <span>Total:</span>
-                                    <span style={{ color: 'var(--accent-color)' }}>{currency}{viewOrderDetails.totalPrice?.toFixed(2)}</span>
+                                <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--accent-color)', marginTop: '4px' }}>
+                                    Grand Total: {currency}{(viewOrderDetails.totalPrice || 0).toFixed(2)}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Modal Footer with Delete Option */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '12px' }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const order = viewOrderDetails;
+                                    setViewOrderDetails(null);
+                                    openDeleteModal(order);
+                                }}
+                                className="btn-secondary"
+                                style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                            >
+                                <Trash2 size={14} /> Delete Order
+                            </button>
+                            <button 
+                                onClick={() => setViewOrderDetails(null)} 
+                                className="btn-secondary"
+                                style={{ padding: '8px 20px', fontSize: '13px' }}
+                            >
+                                Close
+                            </button>
                         </div>
 
                     </div>
