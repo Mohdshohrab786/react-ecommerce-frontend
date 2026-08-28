@@ -49,6 +49,7 @@ const Navbar = () => {
     const [showCategorySidebar, setShowCategorySidebar] = useState(false);
     const [showCurrencyDrop, setShowCurrencyDrop] = useState(false);
     const [forceCloseMegaMenu, setForceCloseMegaMenu] = useState(false);
+    const [activeCategoryTab, setActiveCategoryTab] = useState(null);
 
     // Cart total display
     const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
@@ -60,6 +61,9 @@ const Navbar = () => {
                 const { data } = await axios.get(`${window.API_BASE_URL}/api/categories`);
                 const activeCategories = data.filter(c => c.isActive);
                 setCategories(activeCategories);
+                if (activeCategories.length > 0) {
+                    setActiveCategoryTab(activeCategories[0]._id);
+                }
             } catch (error) {
                 console.error("Error fetching categories for navbar:", error);
             }
@@ -418,10 +422,15 @@ const Navbar = () => {
                             <Link to="/shop">Shop</Link>
                         </div>
 
-                        {/* Categories Mega Dropdown */}
+                        {/* Categories Mega Flyout Dropdown (Amazon/Myntra Style) */}
                         <div 
                             className="nav-item has-mega-menu"
-                            onMouseEnter={() => forceCloseMegaMenu && setForceCloseMegaMenu(false)}
+                            onMouseEnter={() => {
+                                if (forceCloseMegaMenu) setForceCloseMegaMenu(false);
+                                if (categoryTree.length > 0 && !activeCategoryTab) {
+                                    setActiveCategoryTab(categoryTree[0]._id);
+                                }
+                            }}
                             onMouseLeave={() => setForceCloseMegaMenu(false)}
                         >
                             <Link to="/shop" className="nav-dropdown-trigger">
@@ -429,121 +438,128 @@ const Navbar = () => {
                             </Link>
                             
                             <div 
-                                className={`modern-mega-dropdown ${forceCloseMegaMenu ? 'force-hide' : ''}`}
+                                className={`flyout-mega-dropdown ${forceCloseMegaMenu ? 'force-hide' : ''}`}
                                 onClick={(e) => {
                                     if (e.target.closest('a')) {
                                         setForceCloseMegaMenu(true);
                                     }
                                 }}
                             >
-                                <div className="mega-menu-inner">
-                                    {/* Left Main Content: Category Grid */}
-                                    <div className="mega-menu-main">
-                                        <div className="mega-menu-header">
-                                            <div className="mega-menu-title">
-                                                <Layers size={16} color="#f28b00" />
-                                                <span>Explore All Categories</span>
-                                            </div>
-                                            <Link to="/shop" className="mega-view-all-link">
-                                                View All Products <ArrowRight size={13} />
+                                <div className="flyout-menu-container">
+                                    {/* Left Sidebar: Parent Categories List */}
+                                    <div className="flyout-sidebar">
+                                        <div className="flyout-sidebar-header">
+                                            <Layers size={14} color="#f28b00" />
+                                            <span>Categories</span>
+                                        </div>
+                                        <div className="flyout-cat-list">
+                                            {(categoryTree.length > 0 ? categoryTree : [
+                                                { _id: '1', name: 'Jewellery', slug: 'jewellery' },
+                                                { _id: '2', name: 'Electronics', slug: 'electronics' },
+                                                { _id: '3', name: 'Clothing', slug: 'clothing' },
+                                                { _id: '4', name: 'Home Decor', slug: 'home-decor' }
+                                            ]).map((cat) => {
+                                                const isActive = (activeCategoryTab === cat._id) || (!activeCategoryTab && categoryTree[0]?._id === cat._id);
+                                                return (
+                                                    <Link
+                                                        key={cat._id}
+                                                        to={`/category/${cat.slug}`}
+                                                        className={`flyout-cat-item ${isActive ? 'active' : ''}`}
+                                                        onMouseEnter={() => setActiveCategoryTab(cat._id)}
+                                                    >
+                                                        <span className="flyout-cat-bullet">{cat.name.charAt(0).toUpperCase()}</span>
+                                                        <span className="flyout-cat-text">{cat.name}</span>
+                                                        <ChevronRight size={13} className="flyout-cat-arrow" />
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="flyout-sidebar-footer">
+                                            <Link to="/shop" className="flyout-view-all-btn">
+                                                <span>All Products</span>
+                                                <ArrowRight size={12} />
                                             </Link>
                                         </div>
+                                    </div>
 
-                                        <div className="mega-categories-grid">
-                                            {categoryTree.length > 0 ? categoryTree.map((cat, idx) => {
-                                                const gradientColors = [
-                                                    'linear-gradient(135deg, #ffedd5, #fed7aa)',
-                                                    'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
-                                                    'linear-gradient(135deg, #fef3c7, #fde68a)',
-                                                    'linear-gradient(135deg, #dcfce7, #bbf7d0)',
-                                                    'linear-gradient(135deg, #fce7f3, #fbcfe8)',
-                                                    'linear-gradient(135deg, #ede9fe, #ddd6fe)',
-                                                    'linear-gradient(135deg, #e0f2fe, #bae6fd)',
-                                                    'linear-gradient(135deg, #fae8ff, #f5d0fe)'
-                                                ];
-                                                const iconBg = gradientColors[idx % gradientColors.length];
+                                    {/* Right Panel: Active Category's Subcategories */}
+                                    <div className="flyout-content">
+                                        {(() => {
+                                            const activeCat = categoryTree.find(c => c._id === activeCategoryTab) || categoryTree[0] || {
+                                                name: 'Jewellery',
+                                                slug: 'jewellery',
+                                                children: [
+                                                    { _id: 's1', name: 'Earrings', slug: 'earrings' },
+                                                    { _id: 's2', name: 'Necklaces', slug: 'necklaces' },
+                                                    { _id: 's3', name: 'Rings', slug: 'rings' },
+                                                    { _id: 's4', name: 'Bangles', slug: 'bangles' }
+                                                ]
+                                            };
 
-                                                return (
-                                                    <div key={cat._id} className="mega-cat-column">
-                                                        <Link to={`/category/${cat.slug}`} className="mega-cat-col-header">
-                                                            <div className="cat-header-icon" style={{ background: iconBg }}>
-                                                                {cat.image ? (
-                                                                    <img 
-                                                                        src={cat.image.startsWith('http') ? cat.image : `${window.API_BASE_URL}${cat.image}`} 
-                                                                        alt={cat.name} 
-                                                                        className="cat-thumb-img" 
-                                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                                    />
-                                                                ) : null}
-                                                                <span className="cat-initial-badge">
-                                                                    {cat.name.charAt(0).toUpperCase()}
-                                                                </span>
-                                                            </div>
-                                                            <span className="cat-header-title">{cat.name}</span>
-                                                            <ChevronRight size={13} className="cat-header-arrow" />
+                                            return (
+                                                <div className="flyout-content-inner">
+                                                    {/* Header of Active Category */}
+                                                    <div className="flyout-content-header">
+                                                        <div>
+                                                            <h3 className="flyout-active-title">{activeCat.name}</h3>
+                                                            <p className="flyout-active-subtitle">
+                                                                {activeCat.children && activeCat.children.length > 0 
+                                                                    ? `${activeCat.children.length} sub-categories available` 
+                                                                    : `Explore exclusive ${activeCat.name} collection`}
+                                                            </p>
+                                                        </div>
+                                                        <Link to={`/category/${activeCat.slug}`} className="flyout-explore-cat-btn">
+                                                            View All {activeCat.name} &rarr;
                                                         </Link>
-
-                                                        {cat.children && cat.children.length > 0 ? (
-                                                            <ul className="mega-subcat-list">
-                                                                {cat.children.map(sub => (
-                                                                    <li key={sub._id}>
-                                                                        <Link to={`/category/${sub.slug}`} className="mega-subcat-link">
-                                                                            <ChevronRight size={11} className="sub-bullet-icon" />
-                                                                            <span>{sub.name}</span>
-                                                                        </Link>
-                                                                    </li>
-                                                                ))}
-                                                                <li>
-                                                                    <Link to={`/category/${cat.slug}`} className="mega-view-all-subcat">
-                                                                        View all {cat.name} &rarr;
-                                                                    </Link>
-                                                                </li>
-                                                            </ul>
-                                                        ) : (
-                                                            <ul className="mega-subcat-list">
-                                                                <li>
-                                                                    <Link to={`/category/${cat.slug}`} className="mega-subcat-link explore-link">
-                                                                        <ChevronRight size={11} className="sub-bullet-icon" />
-                                                                        <span>Explore Collection</span>
-                                                                    </Link>
-                                                                </li>
-                                                            </ul>
-                                                        )}
                                                     </div>
-                                                );
-                                            }) : (
-                                                [
-                                                    { name: 'Jewellery', subs: ['Earrings', 'Necklaces', 'Rings', 'Bangles'] },
-                                                    { name: 'Electronics', subs: ['Audio', 'Smart Watches', 'Accessories'] },
-                                                    { name: 'Clothing', subs: ['Men Wear', 'Women Wear', 'Ethnic Wear'] },
-                                                    { name: 'Home Decor', subs: ['Candles', 'Fragrances', 'Handmade Art'] }
-                                                ].map((cat, idx) => (
-                                                    <div key={idx} className="mega-cat-column">
-                                                        <Link to="/shop" className="mega-cat-col-header">
-                                                            <div className="cat-header-icon" style={{ background: '#ffedd5' }}>
-                                                                <span className="cat-initial-badge">{cat.name.charAt(0)}</span>
-                                                            </div>
-                                                            <span className="cat-header-title">{cat.name}</span>
-                                                            <ChevronRight size={13} className="cat-header-arrow" />
-                                                        </Link>
-                                                        <ul className="mega-subcat-list">
-                                                            {cat.subs.map((s, sIdx) => (
-                                                                <li key={sIdx}>
-                                                                    <Link to="/shop" className="mega-subcat-link">
-                                                                        <ChevronRight size={11} className="sub-bullet-icon" />
-                                                                        <span>{s}</span>
+
+                                                    {/* Subcategories Grid */}
+                                                    {activeCat.children && activeCat.children.length > 0 ? (
+                                                        <div className="flyout-subcat-grid">
+                                                            {activeCat.children.map((sub) => (
+                                                                <div key={sub._id} className="flyout-subcat-card">
+                                                                    <Link to={`/category/${sub.slug}`} className="flyout-subcat-title-link">
+                                                                        <span className="subcat-chip-icon">◈</span>
+                                                                        <span className="subcat-chip-name">{sub.name}</span>
+                                                                        <ChevronRight size={12} className="subcat-chip-arrow" />
                                                                     </Link>
-                                                                </li>
+                                                                    {sub.children && sub.children.length > 0 && (
+                                                                        <ul className="flyout-grandchild-list">
+                                                                            {sub.children.map((child) => (
+                                                                                <li key={child._id}>
+                                                                                    <Link to={`/category/${child.slug}`}>
+                                                                                        {child.name}
+                                                                                    </Link>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </div>
                                                             ))}
-                                                        </ul>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flyout-empty-subcat">
+                                                            <div className="flyout-quick-banner">
+                                                                <div className="quick-banner-icon">
+                                                                    <Sparkles size={22} color="#ea580c" />
+                                                                </div>
+                                                                <div>
+                                                                    <h4>{activeCat.name} Collection</h4>
+                                                                    <p>Discover top trending items, premium designs and verified quality.</p>
+                                                                </div>
+                                                                <Link to={`/category/${activeCat.slug}`} className="quick-banner-btn">
+                                                                    Browse Collection <ArrowRight size={13} />
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
 
-                                {/* Mega Menu Footer Banner */}
+                                {/* Footer Features Banner */}
                                 <div className="mega-menu-footer">
                                     <div className="footer-feature">
                                         <span>🚚 Free Shipping over ₹499</span>
