@@ -157,6 +157,7 @@ const OrderList = () => {
     const filteredOrders = orders.filter((order) => {
         const matchesSearch = 
             order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (order.orderNumber && order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (order.user && order.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesPay = 
@@ -333,7 +334,7 @@ const OrderList = () => {
                             {currentOrdersList.map((order) => (
                                 <tr key={order._id}>
                                     <td style={{ fontWeight: 600, fontSize: '14px' }}>
-                                        #{order._id.substring(0, 8)}...
+                                        #{order.orderNumber || order._id.substring(0, 8).toUpperCase()}
                                     </td>
                                     <td>{order.user ? order.user.name : <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Deleted User</span>}</td>
                                     <td>{new Date(order.createdAt).toLocaleDateString()}</td>
@@ -511,7 +512,7 @@ const OrderList = () => {
                             {/* Summary Block */}
                             <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                                 <h3 style={{ fontSize: '14px', marginBottom: '12px', color: '#111', textTransform: 'uppercase' }}>Summary</h3>
-                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Order ID:</strong> {viewOrderDetails._id}</p>
+                                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Order ID:</strong> #{viewOrderDetails.orderNumber || viewOrderDetails._id.substring(0, 8).toUpperCase()}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Date:</strong> {new Date(viewOrderDetails.createdAt).toLocaleString()}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Customer:</strong> {viewOrderDetails.user?.name || 'Unknown'}</p>
                                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#4b5563' }}><strong>Email:</strong> {viewOrderDetails.user?.email || 'Unknown'}</p>

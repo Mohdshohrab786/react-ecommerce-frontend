@@ -141,7 +141,7 @@ const DashboardPage = () => {
                             <tbody>
                                 {stats && stats.recentOrders && stats.recentOrders.map((order) => (
                                     <tr key={order._id}>
-                                        <td>{order._id ? `${order._id.substring(0, 8)}...` : 'N/A'}</td>
+                                        <td>#{order.orderNumber || (order._id ? order._id.substring(0, 8).toUpperCase() : 'N/A')}</td>
                                         <td>{order.user ? order.user.name : 'Deleted User'}</td>
                                         <td>{order.createdAt && typeof order.createdAt === 'string' ? order.createdAt.substring(0, 10) : 'N/A'}</td>
                                         <td>{currency}{typeof order.totalPrice === 'number' ? order.totalPrice.toFixed(2) : '0.00'}</td>

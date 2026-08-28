@@ -159,7 +159,7 @@ const OrderDetailsPage = () => {
                 </div>
                 <h1 style={{ color: 'var(--text-primary)', marginBottom: '8px', fontSize: '28px' }}>Thank You For Your Order!</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '16px', marginBottom: '24px' }}>
-                    Your order ID is: <strong style={{ color: 'var(--text-primary)', userSelect: 'all' }}>{order._id}</strong>
+                    Your order ID is: <strong style={{ color: 'var(--text-primary)', userSelect: 'all' }}>#{order.orderNumber || order._id.substring(order._id.length - 8).toUpperCase()}</strong>
                 </p>
                 <Link to="/" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
                     ← Continue Shopping

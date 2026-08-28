@@ -45,6 +45,7 @@ const MyOrdersPage = () => {
                     <table className="admin-table responsive-table">
                         <thead>
                             <tr>
+                                <th>ORDER ID</th>
                                 <th>PRODUCT</th>
                                 <th>DATE</th>
                                 <th>TOTAL</th>
@@ -56,6 +57,9 @@ const MyOrdersPage = () => {
                         <tbody>
                             {orders.map((order) => (
                                 <tr key={order._id}>
+                                    <td data-label="ORDER ID" style={{ fontWeight: 600 }}>
+                                        #{order.orderNumber || order._id.substring(0, 8).toUpperCase()}
+                                    </td>
                                     <td data-label="PRODUCT">
                                         <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
                                             {order.orderItems?.[0]?.name}

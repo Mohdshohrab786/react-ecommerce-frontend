@@ -57,7 +57,7 @@ const OrderSuccessPage = () => {
                         <div className="order-meta-info">
                             <div className="meta-item">
                                 <span className="meta-label">Order ID</span>
-                                <strong className="meta-val">#{order._id}</strong>
+                                <strong className="meta-val">#{order.orderNumber || order._id.substring(order._id.length - 8).toUpperCase()}</strong>
                             </div>
                             <div className="meta-item">
                                 <span className="meta-label">Date</span>
