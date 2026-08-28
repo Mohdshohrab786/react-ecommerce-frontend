@@ -277,13 +277,24 @@ const OrderList = () => {
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button 
                         type="button"
-                        onClick={() => exportOrdersToCSV(filteredOrders.length > 0 ? filteredOrders : orders, 'shahi_store_orders')}
+                        onClick={() => exportOrdersToCSV(orders, 'shahi_store_all_orders')}
                         className="btn-primary"
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px', backgroundColor: '#10b981', borderColor: '#10b981' }}
-                        title="Download all orders in Excel/CSV format"
+                        title="Download ALL orders from entire database into Excel/CSV"
                     >
-                        <Download size={15} /> Export CSV ({filteredOrders.length})
+                        <Download size={15} /> Export All Orders ({orders.length})
                     </button>
+                    {filteredOrders.length !== orders.length && (
+                        <button 
+                            type="button"
+                            onClick={() => exportOrdersToCSV(filteredOrders, 'shahi_store_filtered_orders')}
+                            className="btn-secondary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px' }}
+                            title="Download only currently filtered search orders"
+                        >
+                            <Download size={14} /> Export Filtered ({filteredOrders.length})
+                        </button>
+                    )}
                     <button 
                         onClick={fetchOrders} 
                         className="btn-secondary" 
