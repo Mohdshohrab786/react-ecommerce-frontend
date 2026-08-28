@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Printer } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { generateInvoice } from '../utils/invoiceGenerator';
 import '../pages/CartPage.css';
 
 const OrderDetailsPage = () => {
@@ -161,9 +163,19 @@ const OrderDetailsPage = () => {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '16px', marginBottom: '24px' }}>
                     Your order ID is: <strong style={{ color: 'var(--text-primary)', userSelect: 'all' }}>#{order.orderNumber || order._id.substring(0, 8).toUpperCase()}</strong>
                 </p>
-                <Link to="/" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
-                    ← Continue Shopping
-                </Link>
+                <div style={{ display: 'inline-flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <Link to="/" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
+                        ← Continue Shopping
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => generateInvoice(order, settings)}
+                        className="btn-primary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 24px', cursor: 'pointer' }}
+                    >
+                        <Printer size={16} /> Download Invoice
+                    </button>
+                </div>
             </div>
 
             <h2 className="section-title" style={{ fontSize: '22px' }}>Order Details</h2>

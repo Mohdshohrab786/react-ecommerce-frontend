@@ -15,8 +15,10 @@ import {
     RotateCw,
     AlertCircle,
     X as CloseIcon,
-    Package
+    Package,
+    Printer
 } from 'lucide-react';
+import { generateInvoice } from '../../utils/invoiceGenerator';
 import './Admin.css';
 
 const OrderList = () => {
@@ -362,7 +364,15 @@ const OrderList = () => {
                                         )}
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'inline-flex', gap: '8px' }}>
+                                        <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+                                            <button 
+                                                onClick={() => generateInvoice(order, settings)}
+                                                className="btn-secondary" 
+                                                style={{ padding: '8px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                                                title="Print or Download Invoice"
+                                            >
+                                                <Printer size={13} /> Invoice
+                                            </button>
                                             {!order.isPaid && (
                                                 <button 
                                                     onClick={() => openConfirmModal(order, 'pay')}
@@ -499,13 +509,24 @@ const OrderList = () => {
                 <div className="admin-modal-overlay" style={{ zIndex: 1500 }}>
                     <div className="admin-modal" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                             <h2 style={{ fontSize: '20px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)' }}>
                                 <Package size={22} color="var(--accent-color)" /> Order Details
                             </h2>
-                            <button onClick={() => setViewOrderDetails(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px' }}>
-                                <CloseIcon size={22} />
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => generateInvoice(viewOrderDetails, settings)}
+                                    className="btn-primary"
+                                    style={{ padding: '8px 14px', fontSize: '12.5px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                                    title="Download or Print Invoice"
+                                >
+                                    <Printer size={14} /> Download Invoice
+                                </button>
+                                <button onClick={() => setViewOrderDetails(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px' }}>
+                                    <CloseIcon size={22} />
+                                </button>
+                            </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
