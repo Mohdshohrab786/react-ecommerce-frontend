@@ -12,16 +12,18 @@ import {
     X, 
     Banknote, 
     ShoppingBag, 
-    RotateCw,
-    AlertCircle,
-    X as CloseIcon,
-    Package,
-    Printer,
-    Trash2,
-    CheckSquare,
-    Square
+    RotateCw, 
+    AlertCircle, 
+    X as CloseIcon, 
+    Package, 
+    Printer, 
+    Trash2, 
+    CheckSquare, 
+    Square,
+    Download
 } from 'lucide-react';
 import { generateInvoice } from '../../utils/invoiceGenerator';
+import { exportOrdersToCSV } from '../../utils/csvExporter';
 import './Admin.css';
 
 const OrderList = () => {
@@ -272,7 +274,16 @@ const OrderList = () => {
                         Manage, filter, fulfill, download invoices, and delete customer orders.
                     </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button 
+                        type="button"
+                        onClick={() => exportOrdersToCSV(filteredOrders.length > 0 ? filteredOrders : orders, 'shahi_store_orders')}
+                        className="btn-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px', backgroundColor: '#10b981', borderColor: '#10b981' }}
+                        title="Download all orders in Excel/CSV format"
+                    >
+                        <Download size={15} /> Export CSV ({filteredOrders.length})
+                    </button>
                     <button 
                         onClick={fetchOrders} 
                         className="btn-secondary" 
@@ -330,7 +341,7 @@ const OrderList = () => {
             {/* Sticky Bulk Selection Toolbar */}
             {selectedOrderIds.length > 0 && (
                 <div className="bulk-actions-bar">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                         <span className="badge badge-info" style={{ padding: '6px 12px', fontSize: '13px' }}>
                             {selectedOrderIds.length} Order(s) Selected
                         </span>
@@ -343,26 +354,40 @@ const OrderList = () => {
                             Deselect All
                         </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => openDeleteModal(null)}
-                        style={{ 
-                            background: '#ef4444', 
-                            color: '#ffffff', 
-                            border: 'none', 
-                            padding: '8px 18px', 
-                            borderRadius: '8px', 
-                            fontWeight: '600', 
-                            fontSize: '13px', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '6px',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
-                        }}
-                    >
-                        <Trash2 size={15} /> Delete Selected ({selectedOrderIds.length})
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const selectedOrders = orders.filter(o => selectedOrderIds.includes(o._id));
+                                exportOrdersToCSV(selectedOrders, `selected_${selectedOrders.length}_orders`);
+                            }}
+                            className="btn-secondary"
+                            style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            title="Export Selected Orders to CSV"
+                        >
+                            <Download size={14} /> Export Selected ({selectedOrderIds.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => openDeleteModal(null)}
+                            style={{ 
+                                background: '#ef4444', 
+                                color: '#ffffff', 
+                                border: 'none', 
+                                padding: '8px 18px', 
+                                borderRadius: '8px', 
+                                fontWeight: '600', 
+                                fontSize: '13px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '6px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                            }}
+                        >
+                            <Trash2 size={15} /> Delete Selected ({selectedOrderIds.length})
+                        </button>
+                    </div>
                 </div>
             )}
 
