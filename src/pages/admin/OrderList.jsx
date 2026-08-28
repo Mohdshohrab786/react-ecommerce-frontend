@@ -39,6 +39,7 @@ const OrderList = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [orderToDelete, setOrderToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
     // Pagination States
     const [currentPage, setCurrentPage] = useState(1);
@@ -151,31 +152,43 @@ const OrderList = () => {
     // Single / Bulk Delete Handlers
     const openDeleteModal = (order = null) => {
         setOrderToDelete(order);
+        setDeleteError(null);
         setDeleteModalOpen(true);
     };
 
     const handleConfirmDelete = async () => {
         try {
             setDeleting(true);
+            setDeleteError(null);
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
 
             if (orderToDelete) {
-                // Delete single order
-                await axios.delete(`${window.API_BASE_URL}/api/orders/${orderToDelete._id}`, config);
-                showToast(`Order #${orderToDelete.orderNumber || orderToDelete._id.substring(0, 8)} deleted successfully`);
-                setSelectedOrderIds(prev => prev.filter(id => id !== orderToDelete._id));
+                const targetId = orderToDelete._id;
+                const orderNum = orderToDelete.orderNumber || targetId.substring(0, 8);
+                
+                await axios.delete(`${window.API_BASE_URL}/api/orders/${targetId}`, config);
+                
+                setOrders(prev => prev.filter(o => o._id !== targetId));
+                setSelectedOrderIds(prev => prev.filter(id => id !== targetId));
+                showToast(`Order #${orderNum} deleted successfully`);
             } else if (selectedOrderIds.length > 0) {
-                // Bulk delete selected orders
-                const { data } = await axios.post(`${window.API_BASE_URL}/api/orders/bulk-delete`, { orderIds: selectedOrderIds }, config);
-                showToast(data.message || `${selectedOrderIds.length} orders deleted successfully`);
+                const count = selectedOrderIds.length;
+                const idsToDelete = [...selectedOrderIds];
+                
+                const { data } = await axios.post(`${window.API_BASE_URL}/api/orders/bulk-delete`, { orderIds: idsToDelete }, config);
+                
+                setOrders(prev => prev.filter(o => !idsToDelete.includes(o._id)));
                 setSelectedOrderIds([]);
+                showToast(data.message || `${count} orders deleted successfully`);
             }
 
             setDeleteModalOpen(false);
             setOrderToDelete(null);
             fetchOrders();
         } catch (err) {
-            showToast(err.response?.data?.message || err.message, 'error');
+            const errorMsg = err.response?.data?.message || err.message || 'Failed to delete order. Please try again.';
+            setDeleteError(errorMsg);
+            showToast(errorMsg, 'error');
         } finally {
             setDeleting(false);
         }
@@ -614,21 +627,24 @@ const OrderList = () => {
                                 {orderToDelete ? 'Delete Order' : `Delete ${selectedOrderIds.length} Orders?`}
                             </h2>
                         </div>
-                        <p className="modal-text" style={{ color: 'var(--text-secondary)' }}>
+                        <p className="modal-text" style={{ color: 'var(--text-secondary)', marginBottom: '18px' }}>
                             {orderToDelete ? (
                                 <>
-                                    Are you sure you want to delete Order <strong style={{ color: 'var(--text-primary)' }}>#{orderToDelete.orderNumber || orderToDelete._id.substring(0, 8)}</strong>?
+                                    Kya aap Order <strong style={{ color: 'var(--text-primary)' }}>#{orderToDelete.orderNumber || orderToDelete._id.substring(0, 8).toUpperCase()}</strong> ko delete karna chahte hain?
                                 </>
                             ) : (
                                 <>
-                                    Are you sure you want to permanently delete all <strong style={{ color: 'var(--text-primary)' }}>{selectedOrderIds.length}</strong> selected orders?
+                                    Kya aap selected <strong style={{ color: 'var(--text-primary)' }}>{selectedOrderIds.length} orders</strong> ko permanently delete karna chahte hain?
                                 </>
                             )}
-                            <br /><br />
-                            <span style={{ color: '#ef4444', fontSize: '13px', fontWeight: '500' }}>
-                                ⚠️ Warning: This action cannot be undone and will remove all associated order history.
-                            </span>
                         </p>
+
+                        {deleteError && (
+                            <div className="error-message" style={{ marginBottom: '16px', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>
+                                {deleteError}
+                            </div>
+                        )}
+
                         <div className="modal-actions">
                             <button 
                                 type="button"
@@ -652,7 +668,7 @@ const OrderList = () => {
                                 }}
                                 disabled={deleting}
                             >
-                                {deleting ? 'Deleting...' : 'Yes, Delete Permanently'}
+                                {deleting ? 'Deleting...' : 'Delete Order'}
                             </button>
                         </div>
                     </div>
