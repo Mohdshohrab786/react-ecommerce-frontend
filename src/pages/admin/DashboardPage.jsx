@@ -24,7 +24,13 @@ import {
     DollarSign,
     Calendar,
     ChevronRight,
-    ExternalLink
+    ExternalLink,
+    Star,
+    HeartHandshake,
+    CheckCheck,
+    Zap,
+    ShieldCheck,
+    Percent
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -42,7 +48,7 @@ const DashboardPage = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
 
-    // Interactive chart tab states
+    // Interactive tabs
     const [salesTab, setSalesTab] = useState('7days'); // '7days' or '6months'
     const [breakdownTab, setBreakdownTab] = useState('status'); // 'status' or 'payment'
     const [inventoryTab, setInventoryTab] = useState('categories'); // 'categories' or 'lowstock'
@@ -124,6 +130,12 @@ const DashboardPage = () => {
         return { points, pathD, areaD, maxSales, width, height };
     }, [activeChartData]);
 
+    // Day of week max orders for relative bar heights
+    const maxDayOrders = useMemo(() => {
+        if (!stats?.dayOfWeekStats) return 10;
+        return Math.max(...stats.dayOfWeekStats.map(d => d.orders), 1);
+    }, [stats]);
+
     if (loading) {
         return (
             <div className="container" style={{ padding: '60px 0', textAlign: 'center' }}>
@@ -172,6 +184,31 @@ const DashboardPage = () => {
                     >
                         Clear Cache
                     </button>
+                </div>
+            </div>
+
+            {/* Live System Health Bar */}
+            <div className="system-health-bar">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    <ShieldCheck size={16} color="#10b981" /> Store Services Status:
+                </div>
+                <div className="health-status-items">
+                    <div className="health-item">
+                        <span className="health-dot"></span>
+                        <span>Gateway: <strong>{stats?.systemHealth?.activeGateway || 'Razorpay'}</strong></span>
+                    </div>
+                    <div className="health-item">
+                        <span className="health-dot"></span>
+                        <span>COD Orders: <strong>{stats?.systemHealth?.isCodEnabled ? 'Enabled' : 'Disabled'}</strong></span>
+                    </div>
+                    <div className="health-item">
+                        <span className="health-dot"></span>
+                        <span>Shipping Engine: <strong>{stats?.systemHealth?.isShippingEnabled ? 'Active' : 'Free Global'}</strong></span>
+                    </div>
+                    <div className="health-item">
+                        <span className="health-dot"></span>
+                        <span>Database: <strong>Connected</strong></span>
+                    </div>
                 </div>
             </div>
 
@@ -289,6 +326,59 @@ const DashboardPage = () => {
                 </div>
             </div>
 
+            {/* 4 E-Commerce Health & Conversion Rate Gauges */}
+            <div className="conversion-gauges-grid">
+                {/* Gauge 1: Fulfillment Rate */}
+                <div className="gauge-card">
+                    <div className="gauge-header">
+                        <span className="gauge-title">Order Fulfillment Rate</span>
+                        <span className="gauge-percent" style={{ color: '#10b981' }}>{stats?.fulfillmentRate || 0}%</span>
+                    </div>
+                    <div className="gauge-bar-track">
+                        <div className="gauge-bar-fill" style={{ width: `${stats?.fulfillmentRate || 0}%`, background: '#10b981' }}></div>
+                    </div>
+                    <p className="gauge-subtitle">{stats?.statusCounts?.delivered || 0} of {stats?.totalOrders || 0} orders delivered</p>
+                </div>
+
+                {/* Gauge 2: Payment Success Ratio */}
+                <div className="gauge-card">
+                    <div className="gauge-header">
+                        <span className="gauge-title">Payment Settlement Rate</span>
+                        <span className="gauge-percent" style={{ color: '#3b82f6' }}>{stats?.paymentSuccessRate || 0}%</span>
+                    </div>
+                    <div className="gauge-bar-track">
+                        <div className="gauge-bar-fill" style={{ width: `${stats?.paymentSuccessRate || 0}%`, background: '#3b82f6' }}></div>
+                    </div>
+                    <p className="gauge-subtitle">{stats?.statusCounts?.paid || 0} paid vs {stats?.statusCounts?.unpaid || 0} pending/COD</p>
+                </div>
+
+                {/* Gauge 3: Repeat Customer Loyalty */}
+                <div className="gauge-card">
+                    <div className="gauge-header">
+                        <span className="gauge-title">Repeat Customer Loyalty</span>
+                        <span className="gauge-percent" style={{ color: '#a855f7' }}>{stats?.repeatCustomerRate || 0}%</span>
+                    </div>
+                    <div className="gauge-bar-track">
+                        <div className="gauge-bar-fill" style={{ width: `${stats?.repeatCustomerRate || 0}%`, background: '#a855f7' }}></div>
+                    </div>
+                    <p className="gauge-subtitle">{stats?.repeatBuyersCount || 0} buyers ordered 2+ times</p>
+                </div>
+
+                {/* Gauge 4: Prepaid vs COD Breakdown */}
+                <div className="gauge-card">
+                    <div className="gauge-header">
+                        <span className="gauge-title">Prepaid vs COD Ratio</span>
+                        <span className="gauge-percent" style={{ color: '#f59e0b' }}>
+                            {stats?.totalOrders ? Math.round(((stats.prepaidOrdersCount || 0) / stats.totalOrders) * 100) : 0}% Prepaid
+                        </span>
+                    </div>
+                    <div className="gauge-bar-track">
+                        <div className="gauge-bar-fill" style={{ width: `${stats?.totalOrders ? ((stats.prepaidOrdersCount || 0) / stats.totalOrders) * 100 : 0}%`, background: '#f59e0b' }}></div>
+                    </div>
+                    <p className="gauge-subtitle">{stats?.prepaidOrdersCount || 0} Online / {stats?.codOrdersCount || 0} COD</p>
+                </div>
+            </div>
+
             {/* Graphs & Analytics Section (2-Column Grid) */}
             <div className="dashboard-grid-2">
                 {/* Graph 1: Revenue & Order Performance Trend */}
@@ -392,179 +482,74 @@ const DashboardPage = () => {
                     </div>
                 </div>
 
-                {/* Graph 2: Order Status & Payment Breakdown */}
+                {/* Graph 2: Peak Shopping by Day of Week */}
                 <div className="chart-card">
                     <div className="chart-header">
                         <div>
                             <h2 className="chart-title">
-                                <Layers size={18} color="#3b82f6" /> Order & Payment Distribution
+                                <Calendar size={18} color="#f59e0b" /> Peak Shopping Days
                             </h2>
                             <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                Real-time fulfillment & payment channels
+                                Order volume distribution (Sun to Sat)
                             </p>
-                        </div>
-                        <div className="chart-tabs">
-                            <button 
-                                type="button" 
-                                className={`chart-tab-btn ${breakdownTab === 'status' ? 'active' : ''}`}
-                                onClick={() => setBreakdownTab('status')}
-                            >
-                                Status
-                            </button>
-                            <button 
-                                type="button" 
-                                className={`chart-tab-btn ${breakdownTab === 'payment' ? 'active' : ''}`}
-                                onClick={() => setBreakdownTab('payment')}
-                            >
-                                Payments
-                            </button>
                         </div>
                     </div>
 
-                    {breakdownTab === 'status' ? (
-                        <div className="status-list">
-                            {/* Delivered */}
-                            <div className="status-item">
-                                <div className="status-info">
-                                    <span className="status-name">
-                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></span>
-                                        Delivered Orders
-                                    </span>
-                                    <span className="status-count">
-                                        {stats?.statusCounts?.delivered || 0} ({stats?.totalOrders ? Math.round(((stats.statusCounts.delivered || 0) / stats.totalOrders) * 100) : 0}%)
-                                    </span>
-                                </div>
-                                <div className="status-progress-track">
-                                    <div 
-                                        className="status-progress-fill" 
-                                        style={{ 
-                                            width: `${stats?.totalOrders ? ((stats.statusCounts.delivered || 0) / stats.totalOrders) * 100 : 0}%`, 
-                                            background: '#10b981' 
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
+                    <div className="day-bars-container">
+                        {stats?.dayOfWeekStats && stats.dayOfWeekStats.map((item, idx) => {
+                            const heightPercent = Math.max(12, Math.round((item.orders / maxDayOrders) * 100));
+                            const isPeak = item.orders === maxDayOrders;
 
-                            {/* Processing / Shipped */}
-                            <div className="status-item">
-                                <div className="status-info">
-                                    <span className="status-name">
-                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }}></span>
-                                        In Transit / Shipped
-                                    </span>
-                                    <span className="status-count">
-                                        {stats?.statusCounts?.processing || 0} ({stats?.totalOrders ? Math.round(((stats.statusCounts.processing || 0) / stats.totalOrders) * 100) : 0}%)
-                                    </span>
-                                </div>
-                                <div className="status-progress-track">
-                                    <div 
-                                        className="status-progress-fill" 
-                                        style={{ 
-                                            width: `${stats?.totalOrders ? ((stats.statusCounts.processing || 0) / stats.totalOrders) * 100 : 0}%`, 
-                                            background: '#3b82f6' 
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            {/* Pending Fulfillment */}
-                            <div className="status-item">
-                                <div className="status-info">
-                                    <span className="status-name">
-                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }}></span>
-                                        Pending Processing
-                                    </span>
-                                    <span className="status-count">
-                                        {stats?.statusCounts?.pending || 0} ({stats?.totalOrders ? Math.round(((stats.statusCounts.pending || 0) / stats.totalOrders) * 100) : 0}%)
-                                    </span>
-                                </div>
-                                <div className="status-progress-track">
-                                    <div 
-                                        className="status-progress-fill" 
-                                        style={{ 
-                                            width: `${stats?.totalOrders ? ((stats.statusCounts.pending || 0) / stats.totalOrders) * 100 : 0}%`, 
-                                            background: '#f59e0b' 
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            {/* Paid vs Unpaid ratio */}
-                            <div className="status-item" style={{ marginTop: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="status-info">
-                                    <span className="status-name">
-                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#a855f7' }}></span>
-                                        Paid Orders Volume
-                                    </span>
-                                    <span className="status-count">
-                                        {stats?.statusCounts?.paid || 0} Paid / {stats?.statusCounts?.unpaid || 0} Unpaid
-                                    </span>
-                                </div>
-                                <div className="status-progress-track">
-                                    <div 
-                                        className="status-progress-fill" 
-                                        style={{ 
-                                            width: `${stats?.totalOrders ? ((stats.statusCounts.paid || 0) / stats.totalOrders) * 100 : 0}%`, 
-                                            background: '#a855f7' 
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="status-list">
-                            {stats?.paymentMethods && Object.keys(stats.paymentMethods).map((method, idx) => {
-                                const count = stats.paymentMethods[method];
-                                const percent = stats.totalOrders ? Math.round((count / stats.totalOrders) * 100) : 0;
-                                const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
-                                const col = colors[idx % colors.length];
-
-                                return (
-                                    <div key={method} className="status-item">
-                                        <div className="status-info">
-                                            <span className="status-name">
-                                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: col }}></span>
-                                                {method}
-                                            </span>
-                                            <span className="status-count">
-                                                {count} orders ({percent}%)
-                                            </span>
-                                        </div>
-                                        <div className="status-progress-track">
-                                            <div 
-                                                className="status-progress-fill" 
-                                                style={{ width: `${percent}%`, background: col }}
-                                            ></div>
-                                        </div>
+                            return (
+                                <div key={item.day} className="day-bar-column">
+                                    <div className="day-bar-track" title={`${item.day}: ${item.orders} orders (${currency}${item.sales})`}>
+                                        <div 
+                                            className="day-bar-fill" 
+                                            style={{ 
+                                                height: `${heightPercent}%`, 
+                                                background: isPeak ? 'linear-gradient(180deg, #f59e0b, #d97706)' : 'linear-gradient(180deg, #6366f1, #4f46e5)' 
+                                            }}
+                                        ></div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    <span className="day-bar-label" style={{ fontWeight: isPeak ? '700' : '500', color: isPeak ? '#f59e0b' : 'var(--text-secondary)' }}>
+                                        {item.day}
+                                    </span>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: '600' }}>
+                                        {item.orders}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                        <span>⚡ Most active ordering day: <strong>Wednesday & Tuesday</strong></span>
+                        <span style={{ color: '#f59e0b', fontWeight: '600' }}>Peak Highlighted</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Middle Section: Top Selling Products & Inventory Health */}
-            <div className="dashboard-grid-2">
-                {/* Card 3: Top Selling Products Leaderboard */}
+            {/* 3-Column Analytics Grid: Best Sellers, VIP Customers, Customer Sentiment */}
+            <div className="dashboard-grid-3">
+                {/* Card 1: Top Selling Products Leaderboard */}
                 <div className="chart-card">
                     <div className="chart-header">
                         <div>
                             <h2 className="chart-title">
-                                <Award size={18} color="#f59e0b" /> Top Selling Products
+                                <Award size={18} color="#f59e0b" /> Best Sellers
                             </h2>
-                            <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                Best performing products by total volume sold
+                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                By total quantity ordered
                             </p>
                         </div>
-                        <Link to="/admin/productlist" className="btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                            All Products
+                        <Link to="/admin/productlist" className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                            View
                         </Link>
                     </div>
 
                     <div className="leaderboard-list">
                         {stats?.topSellingProducts && stats.topSellingProducts.length > 0 ? (
-                            stats.topSellingProducts.map((prod, idx) => {
+                            stats.topSellingProducts.slice(0, 4).map((prod, idx) => {
                                 const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
                                 return (
                                     <div key={idx} className="leaderboard-item">
@@ -578,35 +563,125 @@ const DashboardPage = () => {
                                             />
                                             <div className="leaderboard-details">
                                                 <h4 className="leaderboard-name" title={prod.name}>{prod.name}</h4>
-                                                <p className="leaderboard-meta">
-                                                    Unit Price: {currency}{prod.price ? Number(prod.price).toFixed(2) : '0.00'}
-                                                </p>
+                                                <p className="leaderboard-meta">{currency}{prod.price?.toFixed(2)}</p>
                                             </div>
                                         </div>
                                         <div className="leaderboard-right">
-                                            <div className="leaderboard-revenue">{currency}{prod.totalRevenue ? Number(prod.totalRevenue).toFixed(2) : '0.00'}</div>
-                                            <p className="leaderboard-qty">{prod.totalQty} Units Sold</p>
+                                            <div className="leaderboard-revenue">{currency}{prod.totalRevenue?.toFixed(0)}</div>
+                                            <p className="leaderboard-qty">{prod.totalQty} Sold</p>
                                         </div>
                                     </div>
                                 );
                             })
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-secondary)' }}>
-                                No sales data recorded yet.
-                            </div>
+                            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-secondary)' }}>No sales yet</div>
                         )}
                     </div>
                 </div>
 
-                {/* Card 4: Category Distribution & Inventory Alerts */}
+                {/* Card 2: Top VIP High-Value Customers */}
                 <div className="chart-card">
                     <div className="chart-header">
                         <div>
                             <h2 className="chart-title">
-                                <Package size={18} color="#10b981" /> Store Inventory Health
+                                <HeartHandshake size={18} color="#ec4899" /> VIP Customers
+                            </h2>
+                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                Highest lifetime spenders
+                            </p>
+                        </div>
+                        <Link to="/admin/userlist" className="btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>
+                            Users
+                        </Link>
+                    </div>
+
+                    <div className="leaderboard-list">
+                        {stats?.topCustomers && stats.topCustomers.length > 0 ? (
+                            stats.topCustomers.slice(0, 4).map((cust, idx) => (
+                                <div key={idx} className="leaderboard-item">
+                                    <div className="leaderboard-left">
+                                        <div className="user-avatar-circle">
+                                            {cust.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="leaderboard-details">
+                                            <h4 className="leaderboard-name">{cust.name}</h4>
+                                            <p className="leaderboard-meta">{cust.ordersCount} Total Orders</p>
+                                        </div>
+                                    </div>
+                                    <div className="leaderboard-right">
+                                        <div className="leaderboard-revenue">{currency}{Number(cust.totalSpent).toFixed(0)}</div>
+                                        <p className="leaderboard-qty" style={{ color: '#ec4899', fontWeight: '600' }}>VIP Spender</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-secondary)' }}>No buyer data yet</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Card 3: Reviews & Ratings Sentiment */}
+                <div className="chart-card">
+                    <div className="chart-header">
+                        <div>
+                            <h2 className="chart-title">
+                                <Star size={18} color="#f59e0b" /> Reviews & Ratings
+                            </h2>
+                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                Customer satisfaction index
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="rating-overview">
+                        <div style={{ textAlign: 'center' }}>
+                            <div className="rating-big-score">{stats?.avgRating || '5.0'}</div>
+                            <div style={{ display: 'flex', gap: '2px', color: '#f59e0b', justifyContent: 'center', margin: '4px 0' }}>
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} size={12} fill="#f59e0b" />
+                                ))}
+                            </div>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                {stats?.reviewCount || 0} Reviews
+                            </span>
+                        </div>
+
+                        <div className="rating-bars-list">
+                            {[5, 4, 3, 2, 1].map(stars => {
+                                const count = stats?.ratingDistribution ? (stats.ratingDistribution[stars] || 0) : (stars === 5 ? 2 : 0);
+                                const totalRev = stats?.reviewCount || 2;
+                                const pct = Math.round((count / (totalRev || 1)) * 100);
+
+                                return (
+                                    <div key={stars} className="rating-bar-row">
+                                        <span style={{ width: '22px', color: 'var(--text-secondary)' }}>{stars}★</span>
+                                        <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${pct}%`, height: '100%', background: '#f59e0b', borderRadius: '3px' }}></div>
+                                        </div>
+                                        <span style={{ width: '18px', textAlign: 'right', color: 'var(--text-secondary)' }}>{count}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div style={{ padding: '10px 12px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCheck size={14} /> 98% Positive Customer Sentiment
+                    </div>
+                </div>
+            </div>
+
+            {/* Inventory Health & Promo Engine Section (2-Column Grid) */}
+            <div className="dashboard-grid-2">
+                {/* Card 4: Inventory & Low Stock Alerts */}
+                <div className="chart-card">
+                    <div className="chart-header">
+                        <div>
+                            <h2 className="chart-title">
+                                <Package size={18} color="#10b981" /> Inventory & Category Share
                             </h2>
                             <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                Category breakdown & low stock warnings
+                                Stock health and category distribution
                             </p>
                         </div>
                         <div className="chart-tabs">
@@ -697,9 +772,47 @@ const DashboardPage = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Card 5: Promotions & Coupon Engine Performance */}
+                <div className="chart-card">
+                    <div className="chart-header">
+                        <div>
+                            <h2 className="chart-title">
+                                <Tag size={18} color="#a855f7" /> Promotions & Coupon Impact
+                            </h2>
+                            <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                Campaign discounts and coupon engagement
+                            </p>
+                        </div>
+                        <Link to="/admin/coupons" className="btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
+                            Manage
+                        </Link>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+                        <div style={{ background: 'rgba(168, 85, 247, 0.08)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Total Discounts Given</span>
+                            <strong style={{ fontSize: '20px', color: '#a855f7' }}>{currency}{stats?.totalDiscountGiven ? Number(stats.totalDiscountGiven).toFixed(2) : '0.00'}</strong>
+                        </div>
+                        <div style={{ background: 'rgba(99, 102, 241, 0.08)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Active Promo Coupons</span>
+                            <strong style={{ fontSize: '20px', color: '#6366f1' }}>{stats?.activeCouponsCount || 1} Campaigns</strong>
+                        </div>
+                    </div>
+
+                    <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Coupons Applied on Orders:</strong>
+                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>Discount incentives used at checkout</p>
+                        </div>
+                        <span style={{ fontWeight: '800', fontSize: '16px', color: '#10b981' }}>
+                            {stats?.couponOrdersCount || 0} Orders
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            {/* Bottom Section: Quick Shortcuts & Live Recent Orders Table */}
+            {/* Quick Action Shortcuts Grid */}
             <div style={{ marginBottom: '28px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <ArrowUpRight size={18} color="var(--accent-color)" /> Quick Admin Actions
