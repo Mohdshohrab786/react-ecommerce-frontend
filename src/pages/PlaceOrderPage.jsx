@@ -67,7 +67,8 @@ const PlaceOrderPage = () => {
             const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
             const { data } = await axios.post(`${window.API_BASE_URL}/api/shipping-rules/calculate`, {
                 city: shippingAddress.city,
-                pincode: shippingAddress.postalCode
+                pincode: shippingAddress.postalCode,
+                state: shippingAddress.state
             }, config);
 
             if (data.isAvailable) {
