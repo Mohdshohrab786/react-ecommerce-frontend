@@ -7,11 +7,13 @@ export const generateInvoice = (order, settings) => {
     if (!order) return;
 
     const brandName = settings?.websiteName || 'Shahi Store';
-    const storeEmail = settings?.contactEmail || 'support@shahistore.com';
-    const storePhone = settings?.contactPhone || '+91 9876543210';
-    const storeAddress = settings?.contactAddress || 'Main Market, India';
+    const storeEmail = settings?.contactEmail || 'learningpoint0786@gmail.com';
+    const storePhone = settings?.contactPhone || '+91 7500474822';
+    const storeAddress = settings?.contactAddress || ' Shaheen Bagh Okhla , New Delhi India';
     const currency = settings?.currencySymbol || settings?.currency || '₹';
 
+
+ 
     const orderId = order.orderNumber || (order._id ? order._id.substring(0, 8).toUpperCase() : 'N/A');
     const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
