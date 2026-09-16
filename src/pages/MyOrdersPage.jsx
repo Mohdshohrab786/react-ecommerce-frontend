@@ -50,12 +50,14 @@ const MyOrdersPage = () => {
                                 <th>DATE</th>
                                 <th>TOTAL</th>
                                 <th>PAID</th>
-                                <th>DELIVERED</th>
+                                <th>STATUS</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {orders.map((order) => (
+                            {orders.map((order) => {
+                                const actualStatus = order.isDelivered ? 'Delivered' : (order.status || 'Pending');
+                                return (
                                 <tr key={order._id}>
                                     <td data-label="ORDER ID" style={{ fontWeight: 600 }}>
                                         #{order.orderNumber || order._id.substring(0, 8).toUpperCase()}
@@ -69,14 +71,26 @@ const MyOrdersPage = () => {
                                     <td data-label="DATE">{order.createdAt.substring(0, 10)}</td>
                                     <td data-label="TOTAL">{currencySymbol}{order.totalPrice.toFixed(2)}</td>
                                     <td data-label="PAID">{order.isPaid ? order.paidAt.substring(0, 10) : <X color="red" size={20} />}</td>
-                                    <td data-label="DELIVERED">{order.isDelivered ? order.deliveredAt.substring(0, 10) : <X color="red" size={20} />}</td>
+                                    <td data-label="STATUS">
+                                        <span style={{ 
+                                            padding: '4px 8px', 
+                                            borderRadius: '4px', 
+                                            fontSize: '13px', 
+                                            fontWeight: '500',
+                                            backgroundColor: actualStatus === 'Delivered' ? '#d1fae5' : actualStatus === 'Cancelled' ? '#fee2e2' : '#fef3c7',
+                                            color: actualStatus === 'Delivered' ? '#065f46' : actualStatus === 'Cancelled' ? '#991b1b' : '#92400e'
+                                        }}>
+                                            {actualStatus}
+                                        </span>
+                                    </td>
                                     <td data-label="ACTION">
                                         <Link to={`/order/${order._id}`}>
                                             <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '14px' }}>Details</button>
                                         </Link>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

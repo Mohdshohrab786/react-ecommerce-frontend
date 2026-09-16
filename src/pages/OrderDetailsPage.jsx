@@ -153,13 +153,42 @@ const OrderDetailsPage = () => {
         }
     };
 
+    const cancelOrderHandler = async () => {
+        if(window.confirm('Are you sure you want to cancel this order?')) {
+            try {
+                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+                await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/cancel`, { reason: 'Cancelled via Website' }, config);
+                alert('Order Cancelled successfully');
+                fetchOrder();
+            } catch (err) {
+                alert(err.response?.data?.message || 'Error cancelling order');
+            }
+        }
+    };
+
+    const returnOrderHandler = async () => {
+        if(window.confirm('Would you like to initiate a return request for this order?')) {
+            try {
+                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+                await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, { returnReason: 'Requested via Website' }, config);
+                alert('Return Request Initiated successfully');
+                fetchOrder();
+            } catch (err) {
+                alert(err.response?.data?.message || 'Error requesting return');
+            }
+        }
+    };
+
+    const actualStatus = order?.isDelivered ? 'Delivered' : (order?.status || 'Pending');
+    const isCancelledOrReturned = ['Cancelled', 'Returned'].includes(actualStatus);
+
     return loading ? <div className="loader container">Loading Order...</div> : error ? <div className="error-message container">{error}</div> : (
         <div className="container fade-in" style={{ marginTop: '40px' }}>
             <div className="glass" style={{ padding: '32px 24px', borderRadius: '16px', marginBottom: '32px', textAlign: 'center' }}>
                 <div style={{ width: '64px', height: '64px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '32px' }}>
                     ✓
                 </div>
-                <h1 style={{ color: 'var(--text-primary)', marginBottom: '8px', fontSize: '28px' }}>Thank You For Your Order!</h1>
+                <h1 style={{ color: 'var(--text-primary)', marginBottom: '8px', fontSize: '28px' }}>Order Details</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '16px', marginBottom: '24px' }}>
                     Your order ID is: <strong style={{ color: 'var(--text-primary)', userSelect: 'all' }}>#{order.orderNumber || order._id.substring(0, 8).toUpperCase()}</strong>
                 </p>
@@ -187,6 +216,9 @@ const OrderDetailsPage = () => {
                         <p style={{ color: 'var(--text-secondary)' }}><strong>Email:</strong> {order.user.email}</p>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
                             <strong>Address:</strong> {order.shippingAddress.address}, {order.shippingAddress.city} {order.shippingAddress.postalCode}, {order.shippingAddress.country}
+                        </p>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontWeight: 'bold' }}>
+                            <strong>Status:</strong> <span style={{ color: 'var(--accent-color)' }}>{actualStatus}</span>
                         </p>
                         {order.isDelivered ? (
                             <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '12px', borderRadius: '8px' }}>
@@ -267,15 +299,27 @@ const OrderDetailsPage = () => {
                         <span style={{ fontWeight: '700', fontSize: '20px', color: 'var(--accent-color)' }}>{currencySymbol}{order.totalPrice.toFixed(2)}</span>
                     </div>
                     
-                    {!order.isPaid && (
+                    {!order.isPaid && !isCancelledOrReturned && (
                         <button className="btn-primary w-100" onClick={payOrderHandler} disabled={payLoading} style={{ marginBottom: '16px' }}>
                             {payLoading ? 'Processing...' : (userInfo?.isAdmin ? 'Mark As Paid (Cash Collected)' : 'Pay Online Now')}
                         </button>
                     )}
 
-                    {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
-                        <button className="btn-secondary w-100" onClick={deliverOrderHandler} disabled={deliverLoading}>
+                    {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && !isCancelledOrReturned && (
+                        <button className="btn-secondary w-100" onClick={deliverOrderHandler} disabled={deliverLoading} style={{ marginBottom: '16px' }}>
                             {deliverLoading ? 'Updating...' : 'Mark As Delivered'}
+                        </button>
+                    )}
+
+                    {['Pending', 'Confirmed', 'Processing'].includes(actualStatus) && (
+                        <button className="btn-secondary w-100" onClick={cancelOrderHandler} style={{ marginBottom: '16px', backgroundColor: '#ef4444', color: 'white', borderColor: '#ef4444' }}>
+                            Cancel Order
+                        </button>
+                    )}
+
+                    {actualStatus === 'Delivered' && (
+                        <button className="btn-secondary w-100" onClick={returnOrderHandler} style={{ marginBottom: '16px', backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}>
+                            Request Return / Replacement
                         </button>
                     )}
                 </div>
