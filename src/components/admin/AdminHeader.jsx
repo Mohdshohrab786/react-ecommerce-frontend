@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield, Menu, Globe } from 'lucide-react';
+import { Bell, ShoppingBag, User, CheckCheck, Trash2, ArrowRight, Shield, Menu, Globe, AlertCircle, RefreshCw } from 'lucide-react';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import './AdminHeader.css';
@@ -94,6 +94,18 @@ const AdminHeader = ({ onToggleSidebar }) => {
                 return (
                     <div className="admin-notif-icon user">
                         <User size={18} />
+                    </div>
+                );
+            case 'order_cancelled':
+                return (
+                    <div className="admin-notif-icon" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.15)' }}>
+                        <AlertCircle size={18} />
+                    </div>
+                );
+            case 'return_request':
+                return (
+                    <div className="admin-notif-icon" style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)' }}>
+                        <RefreshCw size={18} />
                     </div>
                 );
             default:

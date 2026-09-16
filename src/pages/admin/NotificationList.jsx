@@ -186,15 +186,49 @@ const NotificationList = () => {
                         <User size={22} />
                     </div>
                 );
+            case 'order_cancelled':
+                return (
+                    <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        color: '#f87171',
+                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                    }}>
+                        <AlertCircle size={22} />
+                    </div>
+                );
+            case 'return_request':
+                return (
+                    <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        color: '#fbbf24',
+                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                    }}>
+                        <RefreshCw size={22} />
+                    </div>
+                );
             default:
                 return (
                     <div style={{
                         width: '44px',
                         height: '44px',
                         borderRadius: '12px',
-                        background: 'rgba(139, 92, 246, 0.15)',
-                        color: '#a78bfa',
-                        border: '1px solid rgba(139, 92, 246, 0.25)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: 'var(--text-secondary)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
