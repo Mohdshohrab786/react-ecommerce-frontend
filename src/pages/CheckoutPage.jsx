@@ -342,6 +342,11 @@ const CheckoutPage = () => {
                 setLoading(false);
                 clearCart();
                 navigate(`/order-success/${data._id}`);
+            } else if (paymentMethodState === 'Wallet') {
+                // Wallet payment is already deducted and processed during backend order creation
+                setLoading(false);
+                clearCart();
+                navigate(`/order-success/${data._id}`);
             } else if (paymentMethodState === 'Razorpay') {
                 // Launch real razorpay flow (loading state will be cleared by Razorpay modal dismiss or success)
                 await handleRazorpayPayment(data._id);
