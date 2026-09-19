@@ -41,7 +41,7 @@ const AdminReturnList = () => {
 
     return (
         <div className="admin-page-container fade-in">
-            <h1 className="admin-page-title">Returns</h1>
+            <h1 className="admin-page-title">Returns & Replacements</h1>
             <div className="admin-glass-card">
                 <div style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
