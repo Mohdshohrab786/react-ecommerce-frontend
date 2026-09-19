@@ -504,7 +504,11 @@ const OrderList = () => {
                                         )}
                                     </td>
                                     <td>
-                                        {order.isDelivered ? (
+                                        {['Cancelled', 'Returned', 'Refunded', 'Replacement Requested', 'Replaced'].includes(order.status) ? (
+                                            <span className={`badge badge-${order.status === 'Cancelled' ? 'danger' : 'warning'}`}>
+                                                {order.status === 'Cancelled' ? <X size={12} /> : <Clock size={12} />} {order.status}
+                                            </span>
+                                        ) : order.isDelivered || order.status === 'Delivered' ? (
                                             <span className="badge badge-info">
                                                 <Truck size={12} /> Delivered
                                             </span>
