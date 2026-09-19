@@ -55,6 +55,25 @@ const CheckoutPage = () => {
         }
     }, [userInfo, navigate]);
 
+    // Wallet Balance State
+    const [walletBalance, setWalletBalance] = useState(0);
+
+    // Fetch Wallet Balance
+    useEffect(() => {
+        if (userInfo && settings?.isWalletPaymentEnabled) {
+            const fetchWallet = async () => {
+                try {
+                    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+                    const { data } = await axios.get(`${window.API_BASE_URL}/api/wallet`, config);
+                    if (data) setWalletBalance(data.balance);
+                } catch (e) {
+                    console.error('Could not fetch wallet', e);
+                }
+            };
+            fetchWallet();
+        }
+    }, [userInfo, settings]);
+
     // Redirect to cart if empty on mount
     useEffect(() => {
         if (cartItems.length === 0) {
@@ -529,10 +548,29 @@ const CheckoutPage = () => {
                                 </div>
                             )}
 
+                            {/* Wallet option */}
+                            {settings?.isWalletPaymentEnabled && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                    <input 
+                                        type="radio" 
+                                        id="Wallet" 
+                                        name="paymentMethod" 
+                                        value="Wallet" 
+                                        checked={paymentMethodState === 'Wallet'}
+                                        onChange={(e) => setPaymentMethodState(e.target.value)}
+                                        disabled={walletBalance <= 0}
+                                    />
+                                    <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: walletBalance > 0 ? '#10b981' : 'var(--text-secondary)', cursor: walletBalance > 0 ? 'pointer' : 'not-allowed' }}>
+                                        Pay from Wallet (Balance: {currencySymbol}{walletBalance.toFixed(2)})
+                                        {walletBalance <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Insufficient Balance)</span>}
+                                    </label>
+                                </div>
+                            )}
+
                             {/* If both payment options are disabled by the admin */}
-                            {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && (
+                            {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && !settings?.isWalletPaymentEnabled && (
                                 <p style={{ fontSize: '12px', color: '#ef4444', margin: 0 }}>
-                                    ⚠️ Online payments and COD are currently disabled. Please contact support.
+                                    ⚠️ Online payments, COD and Wallet are currently disabled. Please contact support.
                                 </p>
                             )}
                         </div>
