@@ -22,7 +22,7 @@ const PaymentPage = () => {
         }
         
         // Fetch wallet balance
-        if (userInfo && settings?.isWalletPaymentEnabled) {
+        if (userInfo && settings?.isWalletPaymentEnabled !== false) {
             const fetchWallet = async () => {
                 try {
                     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -75,7 +75,7 @@ const PaymentPage = () => {
                             <label htmlFor="COD" style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)' }}>Cash On Delivery (COD)</label>
                         </div>
                         
-                        {settings?.isWalletPaymentEnabled && (
+                        {settings?.isWalletPaymentEnabled !== false && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                                 <input 
                                     type="radio" 

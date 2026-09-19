@@ -60,7 +60,7 @@ const CheckoutPage = () => {
 
     // Fetch Wallet Balance
     useEffect(() => {
-        if (userInfo && settings?.isWalletPaymentEnabled) {
+        if (userInfo && settings?.isWalletPaymentEnabled !== false) {
             const fetchWallet = async () => {
                 try {
                     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -549,7 +549,7 @@ const CheckoutPage = () => {
                             )}
 
                             {/* Wallet option */}
-                            {settings?.isWalletPaymentEnabled && (
+                            {settings?.isWalletPaymentEnabled !== false && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                                     <input 
                                         type="radio" 
@@ -568,7 +568,7 @@ const CheckoutPage = () => {
                             )}
 
                             {/* If both payment options are disabled by the admin */}
-                            {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && !settings?.isWalletPaymentEnabled && (
+                            {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && settings?.isWalletPaymentEnabled === false && (
                                 <p style={{ fontSize: '12px', color: '#ef4444', margin: 0 }}>
                                     ⚠️ Online payments, COD and Wallet are currently disabled. Please contact support.
                                 </p>
