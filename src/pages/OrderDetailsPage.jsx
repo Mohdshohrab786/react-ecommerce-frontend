@@ -237,16 +237,30 @@ const OrderDetailsPage = () => {
 
     const submitReturnRequest = async () => {
         if (!returnReasonText.trim()) {
-            return alert('Please enter a reason');
+            showToast('Please provide a reason', 'error');
+            return;
         }
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, { returnReason: returnReasonText, requestType }, config);
-            alert(requestType === 'REPLACEMENT' ? 'Replacement Request Initiated successfully' : 'Return Request Initiated successfully');
+            setReturnLoading(true);
+            const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
+            
+            const payload = { returnReason: returnReasonText, requestType };
+            if (window.selectedReturnItem) {
+                payload.returnItems = [{ product: window.selectedReturnItem.product, qty: window.selectedReturnItem.qty }];
+            }
+
+            await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, payload, config);
+            showToast(`${requestType === 'REPLACEMENT' ? 'Replacement' : 'Return'} requested successfully!`);
             setShowReturnModal(false);
-            fetchOrder();
+            window.selectedReturnItem = null; // Clear selection
+            
+            // Refresh order
+            const { data } = await axios.get(`${window.API_BASE_URL}/api/orders/${orderId}`, config);
+            setOrder(data);
         } catch (err) {
-            alert(err.response?.data?.message || 'Error requesting return/replacement');
+            showToast(err.response?.data?.message || err.message, 'error');
+        } finally {
+            setReturnLoading(false);
         }
     };
 
@@ -338,22 +352,56 @@ const OrderDetailsPage = () => {
                     <div className="glass" style={{ padding: '24px', borderRadius: '16px' }}>
                         <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Order Items</h2>
                         <div className="cart-items">
-                            {order.orderItems.map((item, index) => (
-                                <div key={index} className="cart-item" style={{ gridTemplateColumns: '50px 3fr 1fr', padding: '8px 0', borderBottom: '1px solid var(--border-color)', borderRadius: '0' }}>
-                                    <div className="cart-item-img">
-                                        <img 
-                                            src={item.image && item.image.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image}`} 
-                                            alt={item.name} 
-                                        />
+                            {order.orderItems.map((item, index) => {
+                                const eligibility = returnData?.itemsEligibility?.find(e => e.product === item.product);
+                                return (
+                                <div key={index} style={{ padding: '16px 0', borderBottom: '1px solid var(--border-color)' }}>
+                                    <div className="cart-item" style={{ gridTemplateColumns: '50px 3fr 1fr', padding: '0', borderBottom: 'none' }}>
+                                        <div className="cart-item-img">
+                                            <img 
+                                                src={item.image && item.image.startsWith('http') ? item.image : `${window.API_BASE_URL}${item.image}`} 
+                                                alt={item.name} 
+                                            />
+                                        </div>
+                                        <div className="cart-item-name">
+                                            <Link to={`/product/${item.product}`}>{item.name}</Link>
+                                        </div>
+                                        <div className="cart-item-price" style={{ textAlign: 'right', fontWeight: '500' }}>
+                                            {item.qty} x {currencySymbol}{item.price} = {currencySymbol}{(item.qty * item.price).toFixed(2)}
+                                        </div>
                                     </div>
-                                    <div className="cart-item-name">
-                                        <Link to={`/product/${item.product}`}>{item.name}</Link>
-                                    </div>
-                                    <div className="cart-item-price" style={{ textAlign: 'right', fontWeight: '500' }}>
-                                        {item.qty} x {currencySymbol}{item.price} = {currencySymbol}{(item.qty * item.price).toFixed(2)}
-                                    </div>
+                                    {!loadingEligibility && eligibility && (eligibility.canReturn || eligibility.canReplace) && !isCancelledOrReturned && (
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'flex-end' }}>
+                                            {eligibility.canReturn && (
+                                                <button onClick={() => {
+                                                    // Pass product id to modal
+                                                    setReturnReasonText('');
+                                                    openReturnModal('RETURN');
+                                                    // We need a way to store selected items for return.
+                                                    // Using a global var or hacking it via document.body since we don't have a state for it
+                                                    window.selectedReturnItem = item;
+                                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #f59e0b', background: 'transparent', color: '#f59e0b', cursor: 'pointer' }}>
+                                                    Return Item
+                                                </button>
+                                            )}
+                                            {eligibility.canReplace && (
+                                                <button onClick={() => {
+                                                    setReturnReasonText('');
+                                                    openReturnModal('REPLACEMENT');
+                                                    window.selectedReturnItem = item;
+                                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #3b82f6', background: 'transparent', color: '#3b82f6', cursor: 'pointer' }}>
+                                                    Replace Item
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    {!loadingEligibility && eligibility && !eligibility.canReturn && !eligibility.canReplace && order.isDelivered && !isCancelledOrReturned && (
+                                        <div style={{ fontSize: '11px', color: '#ef4444', textAlign: 'right', marginTop: '4px' }}>
+                                            {eligibility.reason}
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </div>
@@ -436,16 +484,7 @@ const OrderDetailsPage = () => {
                     )}
 
                     
-                    {!loadingEligibility && returnData?.canReturn && (
-                        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                            <button className="btn-secondary w-100" onClick={() => openReturnModal('RETURN')} style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}>
-                                Request Return
-                            </button>
-                            <button className="btn-secondary w-100" onClick={() => openReturnModal('REPLACEMENT')} style={{ backgroundColor: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}>
-                                Request Replace
-                            </button>
-                        </div>
-                    )}
+
 
                     {showReturnModal && (
                         <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>

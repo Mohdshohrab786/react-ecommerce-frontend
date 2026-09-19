@@ -61,6 +61,10 @@ const ProductEdit = () => {
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
 
+    const [isReturnable, setIsReturnable] = useState(true);
+    const [isReplaceable, setIsReplaceable] = useState(true);
+    const [returnDays, setReturnDays] = useState(7);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [updateLoading, setUpdateLoading] = useState(false);
@@ -98,6 +102,9 @@ const ProductEdit = () => {
                 setIsActive(product.isActive !== undefined ? product.isActive : true);
                 setIsFeatured(product.isFeatured || false);
                 setIsTrending(product.isTrending || false);
+                setIsReturnable(product.isReturnable !== undefined ? product.isReturnable : true);
+                setIsReplaceable(product.isReplaceable !== undefined ? product.isReplaceable : true);
+                setReturnDays(product.returnDays || 7);
                 setBrand(product.brand?._id || product.brand || '');
                 setCategory(product.category?._id || product.category || '');
                 if (product.subCategories && product.subCategories.length > 0) {
@@ -141,7 +148,8 @@ const ProductEdit = () => {
                 countInStock, isActive, isFeatured, isTrending,
                 image, gallery: gallery,
                 seo: { title: seoTitle, description: seoDescription, keywords: seoKeywords },
-                hasVariants, variants, sizes, relatedProducts, subCategories
+                hasVariants, variants, sizes, relatedProducts, subCategories,
+                isReturnable, isReplaceable, returnDays
             };
 
             if (brand) productData.brand = brand;
@@ -748,6 +756,38 @@ const ProductEdit = () => {
                                     <input type="checkbox" checked={isTrending} onChange={e => setIsTrending(e.target.checked)} />
                                     <span className="slider"></span>
                                 </label>
+
+                                <div className="divider"></div>
+
+                                <label className="modern-toggle">
+                                    <div className="toggle-text">
+                                        <strong>Allow Return</strong>
+                                        <span>Customer can return this product</span>
+                                    </div>
+                                    <input type="checkbox" checked={isReturnable} onChange={e => setIsReturnable(e.target.checked)} />
+                                    <span className="slider"></span>
+                                </label>
+
+                                <div className="divider"></div>
+
+                                <label className="modern-toggle">
+                                    <div className="toggle-text">
+                                        <strong>Allow Replace</strong>
+                                        <span>Customer can replace this product</span>
+                                    </div>
+                                    <input type="checkbox" checked={isReplaceable} onChange={e => setIsReplaceable(e.target.checked)} />
+                                    <span className="slider"></span>
+                                </label>
+                                
+                                {(isReturnable || isReplaceable) && (
+                                    <>
+                                        <div className="divider"></div>
+                                        <div className="form-group" style={{ marginBottom: 0, marginTop: '12px' }}>
+                                            <label>Return/Replace Window (Days)</label>
+                                            <input type="number" className="modern-input" value={returnDays} onChange={e => setReturnDays(Number(e.target.value))} min="1" required />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
