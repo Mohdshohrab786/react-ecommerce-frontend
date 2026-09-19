@@ -26,8 +26,8 @@ const PaymentPage = () => {
             const fetchWallet = async () => {
                 try {
                     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-                    const { data } = await axios.get(`${window.API_BASE_URL}/api/wallet`, config);
-                    if (data) setWalletBalance(data.balance);
+                    const { data } = await axios.get(`${window.API_BASE_URL}/api/wallet/balance`, config);
+                    if (data && data.success !== false) setWalletBalance(data.balance);
                 } catch (e) {
                     console.error('Could not fetch wallet', e);
                 }
