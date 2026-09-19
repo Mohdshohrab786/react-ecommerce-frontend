@@ -237,7 +237,7 @@ const OrderDetailsPage = () => {
 
     const submitReturnRequest = async () => {
         if (!returnReasonText.trim()) {
-            showToast('Please provide a reason', 'error');
+            alert('Please provide a reason');
             return;
         }
         try {
@@ -250,7 +250,7 @@ const OrderDetailsPage = () => {
             }
 
             await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, payload, config);
-            showToast(`${requestType === 'REPLACEMENT' ? 'Replacement' : 'Return'} requested successfully!`);
+            alert(`${requestType === 'REPLACEMENT' ? 'Replacement' : 'Return'} requested successfully!`);
             setShowReturnModal(false);
             window.selectedReturnItem = null; // Clear selection
             
@@ -258,7 +258,7 @@ const OrderDetailsPage = () => {
             const { data } = await axios.get(`${window.API_BASE_URL}/api/orders/${orderId}`, config);
             setOrder(data);
         } catch (err) {
-            showToast(err.response?.data?.message || err.message, 'error');
+            alert(err.response?.data?.message || err.message);
         } finally {
             setReturnLoading(false);
         }
