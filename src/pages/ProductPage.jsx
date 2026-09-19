@@ -415,7 +415,7 @@ const ProductPage = () => {
                         {/* Trust Badges */}
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateColumns: (product.isReturnable !== false || product.isReplaceable !== false) ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
                             gap: '12px',
                             marginTop: '24px',
                             borderTop: '1px solid var(--border-color)',
@@ -426,19 +426,19 @@ const ProductPage = () => {
                                 <strong>100% Genuine</strong>
                                 <p style={{ fontSize: '10px', marginTop: '2px' }}>Direct from brand</p>
                             </div>
-                            <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                <RefreshCw size={20} style={{ margin: '0 auto 8px', color: (product.isReturnable !== false || product.isReplaceable !== false) ? 'var(--accent-color)' : '#ef4444' }} />
-                                <strong>
-                                    {(product.isReturnable !== false || product.isReplaceable !== false) 
-                                        ? `${product.returnDays || 7} Day ${product.isReturnable !== false ? 'Returns' : 'Replacement'}`
-                                        : 'Non-Returnable'}
-                                </strong>
-                                <p style={{ fontSize: '10px', marginTop: '2px' }}>
-                                    {(product.isReturnable !== false && product.isReplaceable !== false) 
-                                        ? 'Returns & Replacements' 
-                                        : (product.isReturnable !== false ? 'Easy returns' : (product.isReplaceable !== false ? 'Easy replacements' : 'No returns allowed'))}
-                                </p>
-                            </div>
+                            {(product.isReturnable !== false || product.isReplaceable !== false) && (
+                                <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                    <RefreshCw size={20} style={{ margin: '0 auto 8px', color: 'var(--accent-color)' }} />
+                                    <strong>
+                                        {`${product.returnDays || 7} Day ${product.isReturnable !== false ? 'Returns' : 'Replacement'}`}
+                                    </strong>
+                                    <p style={{ fontSize: '10px', marginTop: '2px' }}>
+                                        {(product.isReturnable !== false && product.isReplaceable !== false) 
+                                            ? 'Returns & Replacements' 
+                                            : (product.isReturnable !== false ? 'Easy returns' : 'Easy replacements')}
+                                    </p>
+                                </div>
+                            )}
                             <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-secondary)' }}>
                                 <Truck size={20} style={{ margin: '0 auto 8px', color: '#3b82f6' }} />
                                 <strong>Free Delivery</strong>
@@ -591,30 +591,30 @@ const ProductPage = () => {
                         )}
 
                         {/* Prominent Return Policy Indicator */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 16px',
-                            background: (product.isReturnable !== false || product.isReplaceable !== false) ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                            border: (product.isReturnable !== false || product.isReplaceable !== false) ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '8px',
-                            marginBottom: '24px'
-                        }}>
-                            <RefreshCw size={24} style={{ color: (product.isReturnable !== false || product.isReplaceable !== false) ? '#10b981' : '#ef4444' }} />
-                            <div>
-                                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: (product.isReturnable !== false || product.isReplaceable !== false) ? '#059669' : '#dc2626' }}>
-                                    {(product.isReturnable !== false || product.isReplaceable !== false) 
-                                        ? `${product.returnDays || 7} Days Return/Replacement Policy`
-                                        : 'Non-Returnable Product'}
-                                </h4>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                    {(product.isReturnable !== false && product.isReplaceable !== false) 
-                                        ? 'You can return or replace this product if you face any issues.'
-                                        : (product.isReturnable !== false ? 'You can easily return this product.' : (product.isReplaceable !== false ? 'You can easily replace this product.' : 'Returns and replacements are not allowed for this product.'))}
-                                </p>
+                        {(product.isReturnable !== false || product.isReplaceable !== false) && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '12px 16px',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                borderRadius: '8px',
+                                marginBottom: '24px'
+                            }}>
+                                <RefreshCw size={24} style={{ color: '#10b981' }} />
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#059669' }}>
+                                        {`${product.returnDays || 7} Days ${product.isReturnable !== false ? 'Return' : 'Replacement'} Policy`}
+                                    </h4>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        {(product.isReturnable !== false && product.isReplaceable !== false) 
+                                            ? 'You can return or replace this product if you face any issues.'
+                                            : (product.isReturnable !== false ? 'You can easily return this product.' : 'You can easily replace this product.')}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Sleek Purchase Section */}
                         <div className="purchase-section">
