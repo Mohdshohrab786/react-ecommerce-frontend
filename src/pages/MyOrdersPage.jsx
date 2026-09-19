@@ -56,7 +56,7 @@ const MyOrdersPage = () => {
                         </thead>
                         <tbody>
                             {orders.map((order) => {
-                                const actualStatus = order.isDelivered ? 'Delivered' : (order.status || 'Pending');
+                                const actualStatus = ['Returned', 'Replacement Requested', 'Cancelled', 'Refunded', 'Replaced'].includes(order?.status) ? order.status : (order?.isDelivered ? 'Delivered' : (order?.status || 'Pending'));
                                 return (
                                 <tr key={order._id}>
                                     <td data-label="ORDER ID" style={{ fontWeight: 600 }}>

@@ -20,6 +20,7 @@ import BlogDetailPage from './pages/BlogDetailPage';
 import CategoryPage from './pages/CategoryPage';
 import ShopPage from './pages/ShopPage';
 import AllCategoriesPage from './pages/AllCategoriesPage';
+import WalletPage from './pages/WalletPage';
 
 import AdminRoute from './components/AdminRoute';
 import AdminLayout from './components/admin/AdminLayout';
@@ -49,6 +50,9 @@ import { useSettingsStore } from './store/useSettingsStore';
 import WishlistPage from './pages/WishlistPage';
 import { useWishlistStore } from './store/useWishlistStore';
 import { useAuthStore } from './store/useAuthStore';
+import AdminWalletList from './pages/admin/AdminWalletList';
+import AdminRefundList from './pages/admin/AdminRefundList';
+import AdminReturnList from './pages/admin/AdminReturnList';
 
 function App() {
   const fetchSettings = useSettingsStore((state) => state.fetchSettings);
@@ -144,6 +148,7 @@ function App() {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/categories" element={<AllCategoriesPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/wallet" element={<WalletPage />} />
         </Route>
         
         {/* Admin Routes (Completely separate, no frontend Navbar/Footer) */}
@@ -167,6 +172,9 @@ function App() {
             <Route path="/admin/settings" element={<SettingsPage />} />
             <Route path="/admin/payment-settings" element={<PaymentSettingsPage />} />
             <Route path="/admin/shipping-settings" element={<ShippingSettingsPage />} />
+            <Route path="/admin/wallets" element={<AdminWalletList />} />
+            <Route path="/admin/refunds" element={<AdminRefundList />} />
+            <Route path="/admin/returns" element={<AdminReturnList />} />
             <Route path="/admin/bloglist" element={<BlogList />} />
             <Route path="/admin/blog/:id/edit" element={<BlogEdit />} />
             <Route path="/admin/newsletter" element={<NewsletterList />} />

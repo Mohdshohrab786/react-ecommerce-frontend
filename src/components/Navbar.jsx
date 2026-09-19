@@ -166,6 +166,7 @@ const Navbar = () => {
                                     <ul className="top-dropdown">
                                         <li><Link to="/profile" onClick={() => setShowAccountDrop(false)}>My Account</Link></li>
                                         <li><Link to="/orders" onClick={() => setShowAccountDrop(false)}>My Orders</Link></li>
+                                        <li><Link to="/wallet" onClick={() => setShowAccountDrop(false)}>My Wallet</Link></li>
                                         {userInfo.isAdmin && (
                                             <li><Link to="/admin/dashboard" onClick={() => setShowAccountDrop(false)}>Admin Panel</Link></li>
                                         )}
@@ -731,6 +732,7 @@ const Navbar = () => {
                             <>
                                 <Link to="/profile" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>My Account</Link>
                                 <Link to="/orders" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>My Orders</Link>
+                                <Link to="/wallet" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>My Wallet</Link>
                                 {userInfo.isAdmin && (
                                     <Link to="/admin/dashboard" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Admin Panel</Link>
                                 )}

@@ -204,6 +204,7 @@ const NotificationList = () => {
                     </div>
                 );
             case 'return_request':
+            case 'replacement_request':
                 return (
                     <div style={{
                         width: '44px',

@@ -102,7 +102,14 @@ const AdminHeader = ({ onToggleSidebar }) => {
                         <AlertCircle size={18} />
                     </div>
                 );
+            case 'replacement_request':
+                return (
+                    <div className="admin-notif-icon" style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.15)' }}>
+                        <RefreshCw size={18} />
+                    </div>
+                );
             case 'return_request':
+            case 'replacement_request':
                 return (
                     <div className="admin-notif-icon" style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)' }}>
                         <RefreshCw size={18} />

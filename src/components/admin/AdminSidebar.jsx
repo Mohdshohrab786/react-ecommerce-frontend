@@ -56,6 +56,9 @@ const AdminSidebar = ({ isOpen, onClose }) => {
         { name: 'Website Settings', path: '/admin/settings', icon: <Settings size={20} /> },
         { name: 'Payment Settings', path: '/admin/payment-settings', icon: <Settings size={20} /> },
         { name: 'Shipping Settings', path: '/admin/shipping-settings', icon: <Package size={20} /> },
+        { name: 'Wallets', path: '/admin/wallets', icon: <CreditCard size={20} /> },
+        { name: 'Refunds', path: '/admin/refunds', icon: <CreditCard size={20} /> },
+        { name: 'Returns', path: '/admin/returns', icon: <Package size={20} /> },
         { name: 'Newsletter', path: '/admin/newsletter', icon: <Mail size={20} /> },
     ];
 

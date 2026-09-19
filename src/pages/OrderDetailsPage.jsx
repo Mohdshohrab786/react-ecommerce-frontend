@@ -20,12 +20,57 @@ const OrderDetailsPage = () => {
     const [payLoading, setPayLoading] = useState(false);
     const [deliverLoading, setDeliverLoading] = useState(false);
 
+    const [wallet, setWallet] = useState(null);
+    const [useWallet, setUseWallet] = useState(false);
+
+
+    
+    const [cancelData, setCancelData] = useState(null);
+    const [returnData, setReturnData] = useState(null);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnReasonText, setReturnReasonText] = useState('');
+    const [requestType, setRequestType] = useState('RETURN');
+
+    const [loadingEligibility, setLoadingEligibility] = useState(true);
+
+
     const fetchOrder = async () => {
+        
+        
         try {
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             const { data } = await axios.get(`${window.API_BASE_URL}/api/orders/${orderId}`, config);
             setOrder(data);
+            
+            // Check eligibility
+            try {
+                const cancelRes = await axios.get(`${window.API_BASE_URL}/api/orders/${orderId}/cancellation-eligibility`, config);
+                setCancelData(cancelRes.data);
+                
+                if (data.isDelivered || data.status === 'Delivered') {
+                    const returnRes = await axios.get(`${window.API_BASE_URL}/api/orders/${orderId}/return-eligibility`, config);
+                    setReturnData(returnRes.data);
+                }
+            } catch(e) {
+                console.error("Eligibility check error", e);
+            }
+            
+            // Check Wallet
+            if (!data.isPaid && data.status !== 'Cancelled' && data.status !== 'Returned') {
+                try {
+                    const walletRes = await axios.get(`${window.API_BASE_URL}/api/wallet`, config);
+                    if (walletRes.data.success && walletRes.data.wallet) {
+                        setWallet(walletRes.data.wallet);
+                    }
+                } catch(e) {
+                    console.error("Wallet fetch error", e);
+                }
+            }
+            
+            setLoadingEligibility(false);
             setLoading(false);
+
+
         } catch (err) {
             setError(err.response && err.response.data.message ? err.response.data.message : err.message);
             setLoading(false);
@@ -63,9 +108,10 @@ const OrderDetailsPage = () => {
             
             // 1. Generate Razorpay Order ID for the existing MongoDB Order
             const { data: razorpayOrder } = await axios.post(
-                `${window.API_BASE_URL}/api/orders/${orderId}/create-razorpay-order`,
-                {}, config
-            );
+    `${window.API_BASE_URL}/api/orders/${orderId}/create-razorpay-order`,
+    { walletAmountUsed: useWallet && wallet && wallet.balance > 0 ? Math.min(wallet.balance, order.totalPrice) : 0 }, 
+    config
+);
 
             // 2. Open Razorpay Window
             const options = {
@@ -81,10 +127,10 @@ const OrderDetailsPage = () => {
                     try {
                         setPayLoading(true);
                         await axios.post(
-                            `${window.API_BASE_URL}/api/orders/${orderId}/verify-razorpay-payment`,
-                            response,
-                            config
-                        );
+    `${window.API_BASE_URL}/api/orders/${orderId}/verify-razorpay-payment`,
+    { ...response, walletAmountUsed: useWallet && wallet && wallet.balance > 0 ? Math.min(wallet.balance, order.totalPrice) : 0 },
+    config
+);
                         // Payment successful, refresh order data
                         fetchOrder();
                     } catch (verifyErr) {
@@ -117,6 +163,22 @@ const OrderDetailsPage = () => {
 
         } catch (err) {
             setError(err.response?.data?.message || 'Could not initiate Razorpay checkout');
+            setPayLoading(false);
+        }
+    };
+
+    
+    const payWithWalletOnlyHandler = async () => {
+        setPayLoading(true);
+        setError('');
+        try {
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            await axios.post(`${window.API_BASE_URL}/api/orders/${orderId}/pay-with-wallet`, {}, config);
+            alert('Payment Successful via Wallet');
+            fetchOrder();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Wallet payment failed');
+        } finally {
             setPayLoading(false);
         }
     };
@@ -166,20 +228,30 @@ const OrderDetailsPage = () => {
         }
     };
 
-    const returnOrderHandler = async () => {
-        if(window.confirm('Would you like to initiate a return request for this order?')) {
-            try {
-                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-                await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, { returnReason: 'Requested via Website' }, config);
-                alert('Return Request Initiated successfully');
-                fetchOrder();
-            } catch (err) {
-                alert(err.response?.data?.message || 'Error requesting return');
-            }
+    
+    const openReturnModal = (type) => {
+        setRequestType(type);
+        setReturnReasonText('');
+        setShowReturnModal(true);
+    };
+
+    const submitReturnRequest = async () => {
+        if (!returnReasonText.trim()) {
+            return alert('Please enter a reason');
+        }
+        try {
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            await axios.put(`${window.API_BASE_URL}/api/orders/${orderId}/return`, { returnReason: returnReasonText, requestType }, config);
+            alert(requestType === 'REPLACEMENT' ? 'Replacement Request Initiated successfully' : 'Return Request Initiated successfully');
+            setShowReturnModal(false);
+            fetchOrder();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error requesting return/replacement');
         }
     };
 
-    const actualStatus = order?.isDelivered ? 'Delivered' : (order?.status || 'Pending');
+
+    const actualStatus = ['Returned', 'Replacement Requested', 'Cancelled', 'Refunded', 'Replaced'].includes(order?.status) ? order.status : (order?.isDelivered ? 'Delivered' : (order?.status || 'Pending'));
     const isCancelledOrReturned = ['Cancelled', 'Returned'].includes(actualStatus);
 
     return loading ? <div className="loader container">Loading Order...</div> : error ? <div className="error-message container">{error}</div> : (
@@ -232,11 +304,23 @@ const OrderDetailsPage = () => {
                     </div>
 
                     <div className="glass" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px' }}>
+                        
                         <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Payment Method</h2>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
                             <strong>Method:</strong> {order.paymentMethod}
                         </p>
-                        {order.isPaid ? (
+                        {order.walletAmount > 0 && (
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                <strong>Paid from Wallet:</strong> {currencySymbol}{order.walletAmount.toFixed(2)}
+                            </p>
+                        )}
+                        {order.onlineAmount > 0 && (
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                <strong>Paid Online:</strong> {currencySymbol}{order.onlineAmount.toFixed(2)}
+                            </p>
+                        )}
+                        <p style={{ marginBottom: '16px' }}></p>
+{order.isPaid ? (
                             <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '12px', borderRadius: '8px' }}>
                                 Paid on {order.paidAt.substring(0, 10)}
                             </div>
@@ -299,11 +383,38 @@ const OrderDetailsPage = () => {
                         <span style={{ fontWeight: '700', fontSize: '20px', color: 'var(--accent-color)' }}>{currencySymbol}{order.totalPrice.toFixed(2)}</span>
                     </div>
                     
+                    
                     {!order.isPaid && !isCancelledOrReturned && (
-                        <button className="btn-primary w-100" onClick={payOrderHandler} disabled={payLoading} style={{ marginBottom: '16px' }}>
-                            {payLoading ? 'Processing...' : (userInfo?.isAdmin ? 'Mark As Paid (Cash Collected)' : 'Pay Online Now')}
-                        </button>
+                        <div style={{ marginBottom: '16px' }}>
+                            {wallet && wallet.balance > 0 && settings?.isWalletPaymentEnabled && (
+                                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        id="useWallet" 
+                                        checked={useWallet} 
+                                        onChange={(e) => setUseWallet(e.target.checked)}
+                                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                    />
+                                    <label htmlFor="useWallet" style={{ cursor: 'pointer', margin: 0, fontWeight: '500' }}>
+                                        Use Wallet Balance ({currencySymbol}{wallet.balance.toFixed(2)})
+                                    </label>
+                                </div>
+                            )}
+
+                            {useWallet && wallet && wallet.balance >= order.totalPrice ? (
+                                <button className="btn-primary w-100" onClick={payWithWalletOnlyHandler} disabled={payLoading}>
+                                    {payLoading ? 'Processing...' : 'Pay with Wallet'}
+                                </button>
+                            ) : (
+                                <button className="btn-primary w-100" onClick={payOrderHandler} disabled={payLoading}>
+                                    {payLoading ? 'Processing...' : (userInfo?.isAdmin ? 'Mark As Paid (Cash Collected)' : 
+                                        (useWallet && wallet && wallet.balance > 0) ? `Pay ${currencySymbol}${(order.totalPrice - wallet.balance).toFixed(2)} Online` : 'Pay Online Now'
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     )}
+
 
                     {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && !isCancelledOrReturned && (
                         <button className="btn-secondary w-100" onClick={deliverOrderHandler} disabled={deliverLoading} style={{ marginBottom: '16px' }}>
@@ -311,18 +422,55 @@ const OrderDetailsPage = () => {
                         </button>
                     )}
 
-                    {['Pending', 'Confirmed', 'Processing'].includes(actualStatus) && (
+                    
+                    {!loadingEligibility && cancelData?.canCancel && (
                         <button className="btn-secondary w-100" onClick={cancelOrderHandler} style={{ marginBottom: '16px', backgroundColor: '#ef4444', color: 'white', borderColor: '#ef4444' }}>
                             Cancel Order
                         </button>
                     )}
-
-                    {actualStatus === 'Delivered' && (
-                        <button className="btn-secondary w-100" onClick={returnOrderHandler} style={{ marginBottom: '16px', backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}>
-                            Request Return / Replacement
-                        </button>
+                    
+                    {!loadingEligibility && !cancelData?.canCancel && cancelData?.reason && !isCancelledOrReturned && (
+                        <div style={{ fontSize: '12px', color: '#ef4444', marginBottom: '16px', textAlign: 'center' }}>
+                            {cancelData.reason}
+                        </div>
                     )}
-                </div>
+
+                    
+                    {!loadingEligibility && returnData?.canReturn && (
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                            <button className="btn-secondary w-100" onClick={() => openReturnModal('RETURN')} style={{ backgroundColor: '#f59e0b', color: 'white', borderColor: '#f59e0b' }}>
+                                Request Return
+                            </button>
+                            <button className="btn-secondary w-100" onClick={() => openReturnModal('REPLACEMENT')} style={{ backgroundColor: '#3b82f6', color: 'white', borderColor: '#3b82f6' }}>
+                                Request Replace
+                            </button>
+                        </div>
+                    )}
+
+                    {showReturnModal && (
+                        <div style={{ backgroundColor: 'var(--bg-secondary)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                            <h5 style={{ marginBottom: '12px', fontWeight: 'bold' }}>{requestType === 'REPLACEMENT' ? 'Request Replacement' : 'Request Return'}</h5>
+                            <textarea 
+                                rows="3"
+                                placeholder="Please describe your reason..."
+                                value={returnReasonText}
+                                onChange={(e) => setReturnReasonText(e.target.value)}
+                                style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                            ></textarea>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn-primary" onClick={submitReturnRequest} style={{ flex: 1 }}>Submit</button>
+                                <button className="btn-secondary" onClick={() => setShowReturnModal(false)} style={{ flex: 1 }}>Cancel</button>
+                            </div>
+                        </div>
+                    )}
+
+                    
+                    {!loadingEligibility && !returnData?.canReturn && returnData?.reason && (actualStatus === 'Delivered' || isCancelledOrReturned) && (
+                        <div style={{ fontSize: '12px', color: '#f59e0b', marginBottom: '16px', textAlign: 'center' }}>
+                            {returnData.reason}
+                        </div>
+                    )}
+</div>
             </div>
             
         </div>
