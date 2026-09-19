@@ -84,11 +84,11 @@ const PaymentPage = () => {
                                     value="Wallet" 
                                     checked={paymentMethodState === 'Wallet'}
                                     onChange={(e) => setPaymentMethodState(e.target.value)}
-                                    disabled={walletBalance <= 0}
+                                    disabled={(walletBalance || 0) <= 0}
                                 />
-                                <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: walletBalance > 0 ? '#10b981' : 'var(--text-secondary)' }}>
-                                    Pay from Wallet (Balance: {currencySymbol}{walletBalance.toFixed(2)})
-                                    {walletBalance <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Insufficient Balance)</span>}
+                                <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: (walletBalance || 0) > 0 ? '#10b981' : 'var(--text-secondary)' }}>
+                                    Pay from Wallet (Balance: {currencySymbol}{(walletBalance || 0).toFixed(2)})
+                                    {(walletBalance || 0) <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Insufficient Balance)</span>}
                                 </label>
                             </div>
                         )}
