@@ -22,6 +22,7 @@ const OrderDetailsPage = () => {
 
     const [wallet, setWallet] = useState(null);
     const [useWallet, setUseWallet] = useState(false);
+    const [returnLoading, setReturnLoading] = useState(false);
 
 
     
@@ -497,8 +498,8 @@ const OrderDetailsPage = () => {
                                 style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                             ></textarea>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <button className="btn-primary" onClick={submitReturnRequest} style={{ flex: 1 }}>Submit</button>
-                                <button className="btn-secondary" onClick={() => setShowReturnModal(false)} style={{ flex: 1 }}>Cancel</button>
+                                <button className="btn-primary" onClick={submitReturnRequest} disabled={returnLoading} style={{ flex: 1 }}>{returnLoading ? 'Submitting...' : 'Submit'}</button>
+                                <button className="btn-secondary" onClick={() => setShowReturnModal(false)} disabled={returnLoading} style={{ flex: 1 }}>Cancel</button>
                             </div>
                         </div>
                     )}
