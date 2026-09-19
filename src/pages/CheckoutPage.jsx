@@ -563,11 +563,12 @@ const CheckoutPage = () => {
                                         value="Wallet" 
                                         checked={paymentMethodState === 'Wallet'}
                                         onChange={(e) => setPaymentMethodState(e.target.value)}
-                                        disabled={(walletBalance || 0) <= 0}
+                                        disabled={(walletBalance || 0) < Number(totalPrice)}
                                     />
-                                    <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: (walletBalance || 0) > 0 ? '#10b981' : 'var(--text-secondary)', cursor: (walletBalance || 0) > 0 ? 'pointer' : 'not-allowed' }}>
+                                    <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: (walletBalance || 0) >= Number(totalPrice) ? '#10b981' : 'var(--text-secondary)', cursor: (walletBalance || 0) >= Number(totalPrice) ? 'pointer' : 'not-allowed' }}>
                                         Pay from Wallet (Balance: {currencySymbol}{(walletBalance || 0).toFixed(2)})
-                                        {(walletBalance || 0) <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Insufficient Balance)</span>}
+                                        {(walletBalance || 0) <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Empty Balance)</span>}
+                                        {(walletBalance || 0) > 0 && (walletBalance || 0) < Number(totalPrice) && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#f59e0b', display: 'block', marginTop: '4px' }}>(Balance too low to cover full order. Please select Online or COD. You can apply your partial wallet balance on the next page!)</span>}
                                     </label>
                                 </div>
                             )}
