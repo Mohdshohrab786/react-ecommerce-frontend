@@ -484,7 +484,7 @@ const OrderDetailsPage = () => {
                     )}
 
                     
-                    {!loadingEligibility && cancelData?.canCancel && (
+                    {!loadingEligibility && cancelData?.canCancel && !isCancelledOrReturned && (
                         <button className="btn-secondary w-100" onClick={cancelOrderHandler} style={{ marginBottom: '16px', backgroundColor: '#ef4444', color: 'white', borderColor: '#ef4444' }}>
                             Cancel Order
                         </button>
