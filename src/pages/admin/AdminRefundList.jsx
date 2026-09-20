@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 const AdminRefundList = () => {
     const [refunds, setRefunds] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedIds, setSelectedIds] = useState([]);
     const { userInfo } = useAuthStore();
     const getCurrencySymbol = useSettingsStore(state => state.getCurrencySymbol);
 
@@ -39,14 +40,56 @@ const AdminRefundList = () => {
         }
     };
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedIds(refunds.map(r => r._id));
+        else setSelectedIds([]);
+    };
+
+    const handleSelectOne = (e, id) => {
+        if (e.target.checked) setSelectedIds([...selectedIds, id]);
+        else setSelectedIds(selectedIds.filter(selId => selId !== id));
+    };
+
+    const handleDeleteSelected = async () => {
+        if(selectedIds.length === 0) return;
+        if(window.confirm(`Are you sure you want to delete ${selectedIds.length} refund(s)?`)) {
+            try {
+                const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+                await axios.delete(`${window.API_BASE_URL}/api/admin/refunds`, {
+                    ...config,
+                    data: { ids: selectedIds }
+                });
+                alert('Refunds deleted successfully');
+                setSelectedIds([]);
+                fetchRefunds();
+            } catch(e) {
+                alert(e.response?.data?.message || 'Error deleting refunds');
+            }
+        }
+    };
+
     return (
         <div className="admin-page-container fade-in">
-            <h1 className="admin-page-title">Refunds</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h1 className="admin-page-title" style={{ marginBottom: 0 }}>Refunds</h1>
+                {selectedIds.length > 0 && (
+                    <button onClick={handleDeleteSelected} style={{ background: '#ef4444', color: 'white', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                        Delete Selected ({selectedIds.length})
+                    </button>
+                )}
+            </div>
             <div className="admin-glass-card">
                 <div style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={refunds.length > 0 && selectedIds.length === refunds.length} 
+                                        onChange={handleSelectAll} 
+                                    />
+                                </th>
                                 <th>REF ID</th>
                                 <th>USER</th>
                                 <th>ORDER</th>
@@ -59,6 +102,13 @@ const AdminRefundList = () => {
                         <tbody>
                             {refunds.map(r => (
                                 <tr key={r._id}>
+                                    <td>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedIds.includes(r._id)} 
+                                            onChange={(e) => handleSelectOne(e, r._id)} 
+                                        />
+                                    </td>
                                     <td>{r.referenceId}</td>
                                     <td>{r.user?.name || 'N/A'}</td>
                                     <td>{r.order?.orderNumber || (r.order?._id?.substring(0,8) || 'N/A')}</td>
