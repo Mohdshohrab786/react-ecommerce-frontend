@@ -97,6 +97,7 @@ const Footer = () => {
         { to: '/about',   label: 'About Us' },
         { to: '/blog',    label: 'Blog' },
         { to: '/contact', label: 'Contact Us' },
+        { to: '/policies', label: 'Our Policies' },
         { to: '/cart',    label: 'My Cart' },
     ];
 
