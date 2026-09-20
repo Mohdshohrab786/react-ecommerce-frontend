@@ -57,6 +57,7 @@ const CheckoutPage = () => {
 
     // Wallet Balance State
     const [walletBalance, setWalletBalance] = useState(0);
+    const [useWalletBalance, setUseWalletBalance] = useState(false);
 
     // Fetch Wallet Balance
     useEffect(() => {
@@ -79,8 +80,7 @@ const CheckoutPage = () => {
         if (cartItems.length === 0) {
             navigate('/cart');
         }
-        // eslint-disable-next-line
-    }, []);
+    }, [cartItems, navigate]);
 
     // Fetch profile to prefill shipping details if empty
     useEffect(() => {
@@ -154,6 +154,9 @@ const CheckoutPage = () => {
     const shippingPrice = addDecimals(shippingDetails.charge);
     const taxPrice = addDecimals(Number((0.15 * itemsPrice).toFixed(2)));
     const totalPrice = (Number(itemsPrice) + Number(shippingPrice) + Number(taxPrice) - discountAmount).toFixed(2);
+    
+    const walletAmountApplied = useWalletBalance ? Math.min(walletBalance, Number(totalPrice)) : 0;
+    const finalPayable = Number(totalPrice) - walletAmountApplied;
 
     const applyCouponHandler = async () => {
         setCouponError(null);
@@ -330,6 +333,7 @@ const CheckoutPage = () => {
                 shippingPrice,
                 taxPrice,
                 totalPrice,
+                walletAmount: walletAmountApplied,
                 coupon: appliedCoupon ? appliedCoupon._id : undefined,
                 discountAmount: discountAmount
             }, config);
@@ -337,13 +341,13 @@ const CheckoutPage = () => {
             setCreatedOrderId(data._id);
             
             // ── PAYMENT CHOICE LOGIC ──
-            if (paymentMethodState === 'COD') {
-                // Cash On Delivery redirects immediately
+            if (walletAmountApplied >= Number(totalPrice) || paymentMethodState === 'Wallet') {
+                // Fully paid by wallet, or legacy full wallet selected
                 setLoading(false);
                 clearCart();
                 navigate(`/order-success/${data._id}`);
-            } else if (paymentMethodState === 'Wallet') {
-                // Wallet payment is already deducted and processed during backend order creation
+            } else if (paymentMethodState === 'COD') {
+                // Cash On Delivery redirects immediately
                 setLoading(false);
                 clearCart();
                 navigate(`/order-success/${data._id}`);
@@ -501,85 +505,88 @@ const CheckoutPage = () => {
                     {/* Payment Method */}
                     <div className="glass" style={{ padding: '30px', borderRadius: '16px', marginBottom: '24px' }}>
                         <h2 style={{ fontSize: '22px', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>2. Payment Method</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {/* Render active gateway if configured and not 'None' */}
-                            {settings?.activePaymentGateway && settings.activePaymentGateway !== 'None' && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <input 
-                                        type="radio" 
-                                        id={settings.activePaymentGateway} 
-                                        name="paymentMethod" 
-                                        value={settings.activePaymentGateway} 
-                                        checked={paymentMethodState === settings.activePaymentGateway}
-                                        onChange={(e) => setPaymentMethodState(e.target.value)}
-                                    />
-                                    <label htmlFor={settings.activePaymentGateway} style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                        Pay Online via {settings.activePaymentGateway}
-                                    </label>
-                                </div>
-                            )}
+                        
+                        {/* Wallet Checkbox */}
+                        {settings?.isWalletPaymentEnabled !== false && walletBalance > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                <input 
+                                    type="checkbox" 
+                                    id="useWallet" 
+                                    checked={useWalletBalance}
+                                    onChange={(e) => setUseWalletBalance(e.target.checked)}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                />
+                                <label htmlFor="useWallet" style={{ marginBottom: 0, fontWeight: 500, color: '#10b981', cursor: 'pointer' }}>
+                                    Use Wallet Balance (Available: {currencySymbol}{walletBalance.toFixed(2)})
+                                </label>
+                            </div>
+                        )}
 
-                            {/* Fallback to PayPal/Card if no gateway is selected in admin settings but we need an online placeholder */}
-                            {(!settings?.activePaymentGateway || settings.activePaymentGateway === 'None') && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <input 
-                                        type="radio" 
-                                        id="PayPal" 
-                                        name="paymentMethod" 
-                                        value="PayPal" 
-                                        checked={paymentMethodState === 'PayPal'}
-                                        onChange={(e) => setPaymentMethodState(e.target.value)}
-                                    />
-                                    <label htmlFor="PayPal" style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                        PayPal or Credit Card
-                                    </label>
-                                </div>
-                            )}
+                        {finalPayable === 0 ? (
+                            <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', fontWeight: '500' }}>
+                                Your order will be fully paid using your wallet balance.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {/* Render active gateway if configured and not 'None' */}
+                                {settings?.activePaymentGateway && settings.activePaymentGateway !== 'None' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <input 
+                                            type="radio" 
+                                            id={settings.activePaymentGateway} 
+                                            name="paymentMethod" 
+                                            value={settings.activePaymentGateway} 
+                                            checked={paymentMethodState === settings.activePaymentGateway}
+                                            onChange={(e) => setPaymentMethodState(e.target.value)}
+                                        />
+                                        <label htmlFor={settings.activePaymentGateway} style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                            Pay Online via {settings.activePaymentGateway}
+                                        </label>
+                                    </div>
+                                )}
 
-                            {/* COD (Cash On Delivery) option - only shown if enabled in admin settings */}
-                            {settings?.isCodEnabled !== false && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <input 
-                                        type="radio" 
-                                        id="COD" 
-                                        name="paymentMethod" 
-                                        value="COD" 
-                                        checked={paymentMethodState === 'COD'}
-                                        onChange={(e) => setPaymentMethodState(e.target.value)}
-                                    />
-                                    <label htmlFor="COD" style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                        Cash On Delivery (COD)
-                                    </label>
-                                </div>
-                            )}
+                                {/* Fallback to PayPal/Card if no gateway is selected in admin settings but we need an online placeholder */}
+                                {(!settings?.activePaymentGateway || settings.activePaymentGateway === 'None') && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <input 
+                                            type="radio" 
+                                            id="PayPal" 
+                                            name="paymentMethod" 
+                                            value="PayPal" 
+                                            checked={paymentMethodState === 'PayPal'}
+                                            onChange={(e) => setPaymentMethodState(e.target.value)}
+                                        />
+                                        <label htmlFor="PayPal" style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                            PayPal or Credit Card
+                                        </label>
+                                    </div>
+                                )}
 
-                            {/* Wallet option */}
-                            {settings?.isWalletPaymentEnabled !== false && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                                    <input 
-                                        type="radio" 
-                                        id="Wallet" 
-                                        name="paymentMethod" 
-                                        value="Wallet" 
-                                        checked={paymentMethodState === 'Wallet'}
-                                        onChange={(e) => setPaymentMethodState(e.target.value)}
-                                        disabled={(walletBalance || 0) < Number(totalPrice)}
-                                    />
-                                    <label htmlFor="Wallet" style={{ marginBottom: 0, fontWeight: 500, color: (walletBalance || 0) >= Number(totalPrice) ? '#10b981' : 'var(--text-secondary)', cursor: (walletBalance || 0) >= Number(totalPrice) ? 'pointer' : 'not-allowed' }}>
-                                        Pay from Wallet (Balance: {currencySymbol}{(walletBalance || 0).toFixed(2)})
-                                        {(walletBalance || 0) <= 0 && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#ef4444' }}>(Empty Balance)</span>}
-                                        {(walletBalance || 0) > 0 && (walletBalance || 0) < Number(totalPrice) && <span style={{ fontSize: '12px', marginLeft: '8px', color: '#f59e0b', display: 'block', marginTop: '4px' }}>(Balance too low to cover full order. Please select Online or COD. You can apply your partial wallet balance on the next page!)</span>}
-                                    </label>
-                                </div>
-                            )}
+                                {/* COD (Cash On Delivery) option - only shown if enabled in admin settings */}
+                                {settings?.isCodEnabled !== false && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <input 
+                                            type="radio" 
+                                            id="COD" 
+                                            name="paymentMethod" 
+                                            value="COD" 
+                                            checked={paymentMethodState === 'COD'}
+                                            onChange={(e) => setPaymentMethodState(e.target.value)}
+                                        />
+                                        <label htmlFor="COD" style={{ marginBottom: 0, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                            Cash On Delivery (COD)
+                                        </label>
+                                    </div>
+                                )}
 
-                            {/* If both payment options are disabled by the admin */}
-                            {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && settings?.isWalletPaymentEnabled === false && (
-                                <p style={{ fontSize: '12px', color: '#ef4444', margin: 0 }}>
-                                    ⚠️ Online payments, COD and Wallet are currently disabled. Please contact support.
-                                </p>
-                            )}
-                        </div>
+                                {/* If both payment options are disabled by the admin */}
+                                {settings?.isCodEnabled === false && settings?.activePaymentGateway === 'None' && (
+                                    <p style={{ fontSize: '12px', color: '#ef4444', margin: 0 }}>
+                                        ⚠️ Online payments and COD are currently disabled. Please contact support.
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Items Review */}
@@ -633,10 +640,24 @@ const CheckoutPage = () => {
                         </div>
                     )}
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '18px' }}>Total Amount</span>
-                        <span style={{ fontWeight: '700', fontSize: '18px', color: 'var(--accent-color)' }}>{currencySymbol}{totalPrice}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: walletAmountApplied > 0 ? '12px' : '24px' }}>
+                        <span style={{ fontWeight: walletAmountApplied > 0 ? '500' : '700', fontSize: walletAmountApplied > 0 ? '16px' : '18px' }}>Total Amount</span>
+                        <span style={{ fontWeight: walletAmountApplied > 0 ? '500' : '700', fontSize: walletAmountApplied > 0 ? '16px' : '18px' }}>{currencySymbol}{totalPrice}</span>
                     </div>
+
+                    {walletAmountApplied > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)', color: '#10b981', fontWeight: 600 }}>
+                            <span>Wallet Applied</span>
+                            <span>-{currencySymbol}{walletAmountApplied.toFixed(2)}</span>
+                        </div>
+                    )}
+
+                    {walletAmountApplied > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                            <span style={{ fontWeight: '700', fontSize: '18px' }}>Amount to Pay</span>
+                            <span style={{ fontWeight: '700', fontSize: '18px', color: 'var(--accent-color)' }}>{currencySymbol}{finalPayable.toFixed(2)}</span>
+                        </div>
+                    )}
                     
                     {error && <div className="error-message" style={{ marginBottom: '16px' }}>{error}</div>}
                     
