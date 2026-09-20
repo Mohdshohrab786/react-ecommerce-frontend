@@ -305,8 +305,13 @@ const OrderDetailsPage = () => {
                             <strong>Address:</strong> {order.shippingAddress.address}, {order.shippingAddress.city} {order.shippingAddress.postalCode}, {order.shippingAddress.country}
                         </p>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontWeight: 'bold' }}>
-                            <strong>Status:</strong> <span style={{ color: 'var(--accent-color)' }}>{actualStatus}</span>
+                            <strong>Order Status:</strong> <span style={{ color: 'var(--accent-color)' }}>{actualStatus}</span>
                         </p>
+                        {order.returnRequest && (
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontWeight: 'bold' }}>
+                                <strong>Return/Replacement Status:</strong> <span style={{ color: '#f59e0b' }}>{order.returnRequest.status}</span>
+                            </p>
+                        )}
                         {order.isDelivered ? (
                             <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '12px', borderRadius: '8px' }}>
                                 Delivered on {order.deliveredAt.substring(0, 10)}
