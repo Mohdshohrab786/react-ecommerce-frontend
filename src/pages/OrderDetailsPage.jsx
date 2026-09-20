@@ -371,31 +371,6 @@ const OrderDetailsPage = () => {
                                             {item.qty} x {currencySymbol}{item.price} = {currencySymbol}{(item.qty * item.price).toFixed(2)}
                                         </div>
                                     </div>
-                                    {!loadingEligibility && eligibility && (eligibility.canReturn || eligibility.canReplace) && !isCancelledOrReturned && (
-                                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'flex-end' }}>
-                                            {eligibility.canReturn && (
-                                                <button onClick={() => {
-                                                    // Pass product id to modal
-                                                    setReturnReasonText('');
-                                                    openReturnModal('RETURN');
-                                                    // We need a way to store selected items for return.
-                                                    // Using a global var or hacking it via document.body since we don't have a state for it
-                                                    window.selectedReturnItem = item;
-                                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #f59e0b', background: 'transparent', color: '#f59e0b', cursor: 'pointer' }}>
-                                                    Return Item
-                                                </button>
-                                            )}
-                                            {eligibility.canReplace && (
-                                                <button onClick={() => {
-                                                    setReturnReasonText('');
-                                                    openReturnModal('REPLACEMENT');
-                                                    window.selectedReturnItem = item;
-                                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #3b82f6', background: 'transparent', color: '#3b82f6', cursor: 'pointer' }}>
-                                                    Replace Item
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
                                     {!loadingEligibility && eligibility && !eligibility.canReturn && !eligibility.canReplace && order.isDelivered && !isCancelledOrReturned && (
                                         <div style={{ fontSize: '11px', color: '#ef4444', textAlign: 'right', marginTop: '4px' }}>
                                             {eligibility.reason}
@@ -431,6 +406,32 @@ const OrderDetailsPage = () => {
                         <span style={{ fontWeight: '700', fontSize: '20px' }}>Total</span>
                         <span style={{ fontWeight: '700', fontSize: '20px', color: 'var(--accent-color)' }}>{currencySymbol}{order.totalPrice.toFixed(2)}</span>
                     </div>
+
+                    {/* Order Level Return/Replace Buttons */}
+                    {!loadingEligibility && returnData?.itemsEligibility?.some(e => e.canReturn || e.canReplace) && !isCancelledOrReturned && (
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '12px', marginBottom: '16px', justifyContent: 'flex-end' }}>
+                            {returnData.itemsEligibility.some(e => e.canReturn) && (
+                                <button onClick={() => {
+                                    setReturnReasonText('');
+                                    openReturnModal('RETURN');
+                                    const eligibleItem = returnData.itemsEligibility.find(e => e.canReturn);
+                                    window.selectedReturnItem = order.orderItems.find(i => i.product === eligibleItem.product);
+                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid rgb(245, 158, 11)', background: 'transparent', color: 'rgb(245, 158, 11)', cursor: 'pointer' }}>
+                                    Return Item
+                                </button>
+                            )}
+                            {returnData.itemsEligibility.some(e => e.canReplace) && (
+                                <button onClick={() => {
+                                    setReturnReasonText('');
+                                    openReturnModal('REPLACEMENT');
+                                    const eligibleItem = returnData.itemsEligibility.find(e => e.canReplace);
+                                    window.selectedReturnItem = order.orderItems.find(i => i.product === eligibleItem.product);
+                                }} style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid rgb(59, 130, 246)', background: 'transparent', color: 'rgb(59, 130, 246)', cursor: 'pointer' }}>
+                                    Replace Item
+                                </button>
+                            )}
+                        </div>
+                    )}
                     
                     
                     {!order.isPaid && !isCancelledOrReturned && (
