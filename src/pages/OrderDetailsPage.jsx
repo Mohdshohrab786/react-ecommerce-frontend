@@ -267,7 +267,7 @@ const OrderDetailsPage = () => {
 
 
     const actualStatus = ['Returned', 'Replacement Requested', 'Cancelled', 'Refunded', 'Replaced'].includes(order?.status) ? order.status : (order?.isDelivered ? 'Delivered' : (order?.status || 'Pending'));
-    const isCancelledOrReturned = ['Cancelled', 'Returned'].includes(actualStatus);
+    const isCancelledOrReturned = ['Cancelled', 'Returned', 'Refunded', 'Replaced'].includes(actualStatus);
 
     return loading ? <div className="loader container">Loading Order...</div> : error ? <div className="error-message container">{error}</div> : (
         <div className="container fade-in" style={{ marginTop: '40px' }}>
@@ -411,6 +411,12 @@ const OrderDetailsPage = () => {
                         <span style={{ fontWeight: '700', fontSize: '20px' }}>Total</span>
                         <span style={{ fontWeight: '700', fontSize: '20px', color: 'var(--accent-color)' }}>{currencySymbol}{order.totalPrice.toFixed(2)}</span>
                     </div>
+
+                    {actualStatus === 'Refunded' && (
+                        <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', marginBottom: '16px' }}>
+                            ✓ Order Fully Refunded
+                        </div>
+                    )}
 
                     {/* Order Level Return/Replace Buttons */}
                     {!loadingEligibility && returnData?.itemsEligibility?.some(e => e.canReturn || e.canReplace) && !isCancelledOrReturned && (
