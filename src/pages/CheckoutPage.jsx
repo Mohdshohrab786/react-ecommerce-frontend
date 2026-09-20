@@ -80,7 +80,8 @@ const CheckoutPage = () => {
         if (cartItems.length === 0) {
             navigate('/cart');
         }
-    }, [cartItems, navigate]);
+        // eslint-disable-next-line
+    }, []);
 
     // Fetch profile to prefill shipping details if empty
     useEffect(() => {
